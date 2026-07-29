@@ -1,0 +1,131 @@
+LA County historical topo inventory summary
+
+Filter mode: county_list
+County selector: Los Angeles
+Boundary note: derived from selected map-sheet footprints; not an official county polygon.
+
+Selected maps: 1331
+Already downloaded in CA_area/maps/scanned/raw: 15
+Already processed in CA_area/outputs/scanned: 17
+Missing downloads: 1316
+Missing processed outputs: 1314
+
+Approximate coverage bounds (WGS84):
+west=-120.000000, south=32.000000, east=-116.000000, north=35.000000
+Approximate dissolved coverage area (square degrees): 10.000000
+
+Maps by year:
+1894: 1
+1896: 27
+1897: 2
+1898: 4
+1899: 1
+1900: 27
+1901: 7
+1902: 20
+1903: 57
+1904: 7
+1915: 2
+1917: 6
+1920: 1
+1921: 6
+1923: 7
+1924: 11
+1925: 17
+1926: 15
+1927: 14
+1928: 33
+1929: 11
+1930: 19
+1931: 11
+1932: 33
+1933: 46
+1934: 49
+1935: 27
+1936: 19
+1937: 35
+1938: 21
+1939: 29
+1940: 44
+1941: 21
+1942: 26
+1943: 44
+1944: 7
+1945: 5
+1947: 15
+1948: 3
+1949: 22
+1950: 40
+1951: 18
+1952: 50
+1953: 29
+1954: 11
+1955: 15
+1956: 19
+1957: 26
+1958: 71
+1959: 44
+1960: 16
+1963: 4
+1964: 34
+1965: 18
+1966: 65
+1967: 8
+1968: 1
+1973: 9
+1974: 4
+1975: 2
+1976: 13
+1978: 4
+1979: 1
+1980: 2
+1981: 8
+1982: 3
+1983: 1
+1991: 14
+1992: 4
+1994: 1
+1995: 41
+1996: 1
+1998: 2
+
+Maps by scale:
+20000: 5
+24000: 1027
+31680: 12
+48000: 3
+50000: 1
+62500: 205
+96000: 1
+100000: 14
+125000: 27
+250000: 36
+
+Distinct county_list values among selected rows:
+Kern,Los Angeles: 15
+Kern,Ventura,Los Angeles: 9
+Los Angeles: 808
+Los Angeles,Kern: 42
+Los Angeles,Kern,San Bernardino: 4
+Los Angeles,Kern,Ventura: 16
+Los Angeles,Orange: 40
+Los Angeles,Orange,San Bernardino: 3
+Los Angeles,Orange,Santa Barbara,Ventura: 3
+Los Angeles,San Bernardino: 69
+Los Angeles,Santa Barbara: 2
+Los Angeles,Santa Barbara,Ventura,Orange: 9
+Los Angeles,Ventura: 99
+Los Angeles,Ventura,Kern: 4
+Los Angeles,Ventura,Santa Barbara,Kern,San Luis Obispo: 10
+Orange,Los Angeles: 38
+Orange,Los Angeles,San Bernardino: 19
+Orange,Riverside,San Bernardino,Los Angeles,San Diego: 7
+Orange,Riverside,San Diego,Imperial,San Bernardino,Los Angeles: 9
+Riverside,Orange,San Bernardino,Los Angeles,San Diego: 1
+San Bernardino,Kern,Los Angeles: 5
+San Bernardino,Los Angeles: 38
+San Bernardino,Los Angeles,Kern: 2
+San Bernardino,Los Angeles,Kern,Riverside: 7
+San Bernardino,Los Angeles,Riverside: 22
+San Francisco,Los Angeles: 5
+Ventura,Los Angeles: 45

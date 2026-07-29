@@ -1,0 +1,223 @@
+{
+  "patch_id": "BeverlyHills_ref_patch_005",
+  "image_size": [
+    128,
+    128
+  ],
+  "source_map": "CA_Beverly Hills_100133_1995_24000_geo.tif",
+  "source_vector": "roads_clip_raster_crs.gpkg",
+  "row_off": 4448,
+  "col_off": 3264,
+  "selection_center_lat": 34.04897,
+  "selection_center_lon": -118.4368,
+  "line_entities": [
+    {
+      "type": "road",
+      "coords": [
+        [
+          0,
+          58
+        ],
+        [
+          48,
+          125
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          29,
+          20
+        ],
+        [
+          0,
+          29
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          18,
+          4
+        ],
+        [
+          0,
+          10
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          48,
+          125
+        ],
+        [
+          50,
+          127
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          48,
+          125
+        ],
+        [
+          44,
+          127
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          89,
+          95
+        ],
+        [
+          113,
+          127
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          89,
+          95
+        ],
+        [
+          48,
+          125
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          127,
+          68
+        ],
+        [
+          89,
+          95
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          34,
+          18
+        ],
+        [
+          89,
+          95
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          85,
+          1
+        ],
+        [
+          127,
+          62
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          29,
+          20
+        ],
+        [
+          34,
+          18
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          18,
+          4
+        ],
+        [
+          34,
+          18
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          85,
+          1
+        ],
+        [
+          34,
+          18
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          31,
+          0
+        ],
+        [
+          18,
+          4
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          89,
+          0
+        ],
+        [
+          85,
+          1
+        ]
+      ]
+    },
+    {
+      "type": "road",
+      "coords": [
+        [
+          15,
+          0
+        ],
+        [
+          18,
+          4
+        ]
+      ]
+    }
+  ]
+}

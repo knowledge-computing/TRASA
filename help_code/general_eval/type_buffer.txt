@@ -1,0 +1,49 @@
+results from road_eval_type_aware.py
+date: 2026-05-18
+
+type-aware buffer setting:
+primary road:        10 px
+secondary road:       7 px
+local road:           5 px
+minor/trail road:     3 px
+railroad/special:     5 px
+
+TYPE-AWARE BUFFER RESULTS
+=========================================================================================
+
+method              completeness   correctness    quality    apls    junction_f1  conn    f1_pix   iou
+---------------------------------------------------------------------------------------------------------
+LDTR_SAMroad_NTC       0.8874         0.8726      0.7861   0.8247      0.7915    0.8468   0.8842  0.7930
+LDTR                   0.8359         0.8484      0.7241   0.7692      0.7064    0.7817   0.8428  0.7356
+SAM3                   0.8027         0.8421      0.7054   0.7216      0.6638    0.7425   0.8164  0.6897
+GPT5_5                 0.7489         0.7815      0.6342   0.6728      0.6017    0.6812   0.7648  0.6194
+
+PER-ROAD-TYPE RESULTS
+==============================================================================================
+
+road_type        buffer   method              completeness   correctness    apls    type_f1
+----------------------------------------------------------------------------------------------
+primary          10 px    LDTR_SAMroad_NTC       0.9284         0.9017      0.8615   0.8842
+primary          10 px    LDTR                   0.8892         0.8725      0.8114     N/A
+primary          10 px    SAM3                   0.8613         0.8726      0.7684   0.7921
+primary          10 px    GPT5_5                 0.8128         0.8197      0.7132   0.7314
+
+secondary         7 px    LDTR_SAMroad_NTC       0.8946         0.8812      0.8357   0.8493
+secondary         7 px    LDTR                   0.8517         0.8569      0.7816     N/A
+secondary         7 px    SAM3                   0.8165         0.8534      0.7396   0.7588
+secondary         7 px    GPT5_5                 0.7621         0.7945      0.6894   0.7016
+
+local             5 px    LDTR_SAMroad_NTC       0.8619         0.8575      0.8012   0.8176
+local             5 px    LDTR                   0.8125         0.8312      0.7484     N/A
+local             5 px    SAM3                   0.7827         0.8331      0.7065   0.7214
+local             5 px    GPT5_5                 0.7264         0.7738      0.6517   0.6582
+
+minor_trail       3 px    LDTR_SAMroad_NTC       0.7912         0.8268      0.7349   0.7685
+minor_trail       3 px    LDTR                   0.7296         0.7942      0.6726     N/A
+minor_trail       3 px    SAM3                   0.6845         0.7896      0.6152   0.6387
+minor_trail       3 px    GPT5_5                 0.6326         0.7241      0.5629   0.5815
+
+rail_special      5 px    LDTR_SAMroad_NTC       0.8517         0.8693      0.7896   0.8124
+rail_special      5 px    LDTR                   0.8014         0.8367      0.7318     N/A
+rail_special      5 px    SAM3                   0.7682         0.8384      0.6927   0.7046
+rail_special      5 px    GPT5_5                 0.7145         0.7712      0.6416   0.6468
