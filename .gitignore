@@ -1,75 +1,14 @@
-# Python
 __pycache__/
-*.py[cod]
 .pytest_cache/
-.mypy_cache/
-.ipynb_checkpoints/
-
-# Environments
+*.egg-info/
 .venv/
-venv/
-env/
-*_venv/
-.env
-.env.*
-
-# Build artifacts
 build/
 dist/
-*.egg-info/
-*.so
-*.o
-*.a
-
-# Experiments and models
-wandb/
-logs/
-runs/
-checkpoints/
-checkpoint/
-sam_ckpts/
-outputs/
-output/
-results/
-save/
-*.pt
-*.pth
-*.ckpt
-*.onnx
-
-# Data
 data/
-dataset/
-datasets/
-test_data/
-maps/
-shared_data/
-patches_with_gt/
-cityscale/20cities/
-spacenet/RGB_1.0_meter/
-
-# Images, arrays, geospatial data, and archives
-*.png
-*.jpg
-*.jpeg
-*.tif
-*.tiff
-*.npy
+checkpoints/
+runs/
+*.pth
+*.pt
+*.ckpt
 *.npz
-*.pkl
-*.pickle
-*.zip
-*.tar
-*.tar.gz
-*.tgz
-
-# Accidental argument files
---checkpoint
---config
---cuda_visible_device
---output_dir
-
-# Editors
-.vscode/
-.idea/
-.DS_Store
+docs/paper/

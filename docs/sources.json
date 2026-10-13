@@ -1,0 +1,15 @@
+{
+  "ldtr": {
+    "url": "https://github.com/knowledge-computing/LDTR",
+    "commit": "eaf5c9f3e66ca0181ea98fe4378420107b8af296"
+  },
+  "sam_road": {
+    "url": "https://github.com/htcr/sam_road",
+    "commit": "04b67c503f120ecff2b2dc5a2041ea6d300e306a"
+  },
+  "sam": {
+    "url": "https://github.com/htcr/segment-anything-road",
+    "commit": "6fdee8f2727f4506cfbbe553e23b895e27956588"
+  },
+  "trasa_manuscript_sha256": "0c9249133be541e5cee1546280f38ccfab840e1c0f039a455fac595ce75b4fd3"
+}

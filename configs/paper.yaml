@@ -1,0 +1,31 @@
+patch_size: 256
+num_queries: 100
+hidden_dim: 256
+encoder_layers: 3
+decoder_layers: 3
+attention_heads: 8
+feature_levels: 4
+feedforward_dim: 1024
+dropout: 0.1
+sampling_points: 4
+hops: 5
+guidance: true
+ntc: true
+pretrained_backbone: true
+node_weight: 1.0
+edge_weight: 1.0
+connectivity_weight: 1.0
+type_weight: 0.5
+matcher_class_cost: 3.0
+matcher_node_cost: 5.0
+node_class_weights: [0.2, 0.8]
+edge_class_weights: [1.0, 20.0]
+node_threshold: 0.5
+edge_threshold: 0.5
+merge_tolerance: 5.0
+boundary_band: 5.0
+batch_size: 8
+epochs: 100
+learning_rate: 0.0001
+weight_decay: 0.0001
+seed: 10
