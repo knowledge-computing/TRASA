@@ -1,0 +1,1027 @@
+[
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/.gitignore",
+    "sha256": "32dae3052f331ee34d628ef535709b301259a45df7c7522c4d35dcf49873f00b"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/README.md",
+    "sha256": "f2cbce6624a4e012023eb33dcac5e31b058a6487b48eb2127fc16f681ea7d584"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/box_ops_2D.py",
+    "sha256": "f163e13ca228622c2d6d5cc57fa81fdf8a68c97b883130ac1bd2fc9de3962516"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/configs/usgs_railroads.yaml",
+    "sha256": "f8450b7886689b06d39db0dcce967642a2884aadd25fb8aa4cb564d74f6bee88"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/dataset_road_network.py",
+    "sha256": "48787530628d515fc93530f938dccf147b50bcc46244cb04d39489d731869090"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/evaluator.py",
+    "sha256": "5ee57cb0a42dbca92a73b14bae08c077681557a529b08af59e8e264b1a78490a"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/generate_negative_training_data.py",
+    "sha256": "4c5b1dc9f9ddc8e47bcccbf1e6b778bb5728883c16d6c652a4cacb88f51abdd0"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/generate_positive_training_data.py",
+    "sha256": "41243076017b6b260eb46fe4d935eff50d01cfdd62821c2dbcf7d19f27acdaa0"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/check_data.py",
+    "sha256": "e89b3570662997b3151ea09c24599850c4f56465a95566135af981e7b484503d"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/check_pos_patch.py",
+    "sha256": "1d70b4183833850eb3b2574622caa15a4d03c0c708e3b748640cc7d697afbecb"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/common.py",
+    "sha256": "8da5cee7106061443aafe8d9ca3c079cbec966874f41dc33ab74fff1df36127f"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/crop_pred4vis.py",
+    "sha256": "613619c53450e921491c6be252fd820a61099069aac92aa549f28bb307e9cdd6"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/data.py",
+    "sha256": "63b8834e2e1e6003e6d43be3004b8a541db0277ecda5fd0a134ca02898530f32"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/gen_pickle.py",
+    "sha256": "90516ab489a57b3bf77f8c2af327dec44d4135a883666c005276039c7cd6cd79"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/gen_subregion_shp.py",
+    "sha256": "2dd6ea4c9281b7ff5458ff5831a38cd2a83bf60ba5e1d7b13daedabd39fd4d18"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/geo2img_shp.py",
+    "sha256": "cd1af9b29d6c0da9168ec060aaf329751c13caeeed22a77bafa434274304aa0c"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/graph_ops_usgs.py",
+    "sha256": "9eb0f0ebc3db7408321ea6d951bdc0926f57cd1abbda274b07ca633ff42ed1c8"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/main.py",
+    "sha256": "cc3d2b679d1433499eacbbda1b4c067f510294338a39876dad060795401b777e"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/mapdriver_usgs.py",
+    "sha256": "c2dd9b5cc85a33d45497173698dafc26f4025924cc235dd56a12ea95797804e5"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/move_files.py",
+    "sha256": "5773438cde8dc814915f6be0cb0d68d66027c229af1aa9a9859077d88c7bb4ef"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/process_shp.py",
+    "sha256": "faa9e2b3164b9655a1da8e49bdb2444baa48105252dd683328e8d8334dbc6d92"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/train_test_stat.py",
+    "sha256": "7f4c9773bd2b882b9f72abbe6003ac3ae8bc0f23e70bcfce42d390b303b4e3fe"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/helper/visual_data.py",
+    "sha256": "5700ea56f970cfbd1f06f3767ff5ecb3d9247dbebf7e39003c40b9c5d53876b9"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/inference.py",
+    "sha256": "62879a745d72eae1d8c85aeac8e5cc46e7d60486ec42caa1c7252b71e4fb6392"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/inference_on_map.py",
+    "sha256": "5dae0290a736b35ad68f8c2a52a84bcdf448c3434e3ef77bb6f9e6807e599c47"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/inference_on_patch.py",
+    "sha256": "4a3e39f153571a09c1b2433f2755d7d0e3c0cec230376a9658628cd6489b36f8"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/losses_map.py",
+    "sha256": "de4c988b1e133c44e96412de62ee99372ab4dd2d0a1d966e2a934ad6bea6c49b"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metric_map.py",
+    "sha256": "8fed364e42c2ac2f1014b874c97dfdfc72b0cb69614a6023e150b2318d00a172"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metric_smd.py",
+    "sha256": "4b1772adee879a036f0aed30a708ea2b4a08079c7b8c4cf3dd59bd2fff8eb730"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metrics/__init__.py",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metrics/det.py",
+    "sha256": "b6f80d118bff0c6cb6f84e2faaa5a4b2017942dd7422bf56be5d156dd040da78"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metrics/graph.py",
+    "sha256": "92a3aafd93e1a95ed62fc97bde660b3bf7ff174c54a46187c43355214bdb6c83"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metrics/showTOPO.py",
+    "sha256": "4f4cc923ae6b7787df61ed8070514abd191fe32b3b6d28df2b0c36dab291470f"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/metrics/topo.py",
+    "sha256": "e3b8089b096aa79db21b059fa97e87ee76ed03ad69583f5902bdcb98c72f9263"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/__init__.py",
+    "sha256": "b508804604abf9b4a559f8bca1233e4412911ac6be72ef6e5cac4fb12f0011a2"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/dataset_road_network.py",
+    "sha256": "6d82218d7c13d4326c6976f3a42e789c074e5df7b744a6a12700f3d54b82ee57"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/deformable_detr_2D.py",
+    "sha256": "668ed29063cf577ef21aa891713ae666febd70d630eafc57085b8207f0f71abf"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/deformable_detr_backbone.py",
+    "sha256": "126eac52f0207dee9543c8b90998e5a65d066489347cc5197a96aed89ee13e4c"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/losses_map.py",
+    "sha256": "724fc56e9abb1e33ed0964b282f9f900fd9526bfb953fd6f73636509ad9ebde0"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/matcher.py",
+    "sha256": "bf8a2325212b413f553fff0881c81cc6fe35baa754a8b025669f009bb8b78271"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/functions/__init__.py",
+    "sha256": "e1a39c1cf23562b11d696d81f95cf8bef368c48149b681d1eadc7f6d188edd3a"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/functions/ms_deform_attn_func.py",
+    "sha256": "dd9906037ce7dc45b9ef6f39d4934bb4dddefc3e09049024496827714b6738bc"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/make.sh",
+    "sha256": "37a07393d06bc9114f634fbc216119ff709283a1718816aff8bd6eab6e26788b"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/modules/__init__.py",
+    "sha256": "3a40cdcd146fc93c3f4ba9702924582f6502e5fcd1ceccf687e9d0e6ff2d7b5f"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/modules/ms_deform_attn.py",
+    "sha256": "319f3ef90eacc74e5de1e43cb3b50924804d586251c5dfabc48f7de6e7ea562b"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/setup.py",
+    "sha256": "167e8f8ffa224514c1f195b5091b5ed6f7cfcabfe8b967719ddede3c402a103f"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/cpu/ms_deform_attn_cpu.cpp",
+    "sha256": "d7f7c3d2df2484f3905005e13c8dc12dd943fd4451a59a059bda367eefa4dccd"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/cpu/ms_deform_attn_cpu.h",
+    "sha256": "b9114ab52ea7610184b3eb9672731c3d1a7ce92e69bfdec6cf661ae988416aef"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/cuda/ms_deform_attn_cuda.cu",
+    "sha256": "65cf318c67d99d6b163027e7190bc8776ff16a7197b332ad537f70cf6cc12be0"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/cuda/ms_deform_attn_cuda.h",
+    "sha256": "c9cd9345e0881dfeebbfa5e98b6e6990a3d415a430bcbaaba3706ce5a2379401"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/cuda/ms_deform_im2col_cuda.cuh",
+    "sha256": "136729520587cbf0593209d692af61a1e8af5909bcf34b8bacb8844878496bad"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/ms_deform_attn.h",
+    "sha256": "2fdc244f99e3e3b9af8dae02e09139de3f546eef83748495c3f175f48278cf41"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/src/vision.cpp",
+    "sha256": "8dec032236873cee3ae86921dabbbb02c62ffd95ddbb83aef0b1b856771e8a61"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/ops/test.py",
+    "sha256": "6066519322d749265c9983117ba8b012b35b6fbd46505d5b7842751eeb706942"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/position_encoding_2D.py",
+    "sha256": "ce4d06e218c4bdc4d03196de9844a2ec9b3b5af3c8c6cbeab63dd72d00f6c819"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/relationformer.py",
+    "sha256": "9db5a2da66914820c8bf86c1af69e97920757c0cce6276d2efa871cf9e08b608"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/relationformer_2D.py",
+    "sha256": "84e0af246274ce9bad6c766007ef32317e30ec533977c4e442627907c7099764"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/requirements.txt",
+    "sha256": "45ccf978750b986e977ba3cc8f44e0bf92fa05bef2bf7b4e2181ba5e71fe30f8"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/test_darpa_map_conflation_shapely.py",
+    "sha256": "b4713919d9edfcb7bb12acd73d6435b07e66b9095fb939f50c5adcdd28512eb1"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/test_map_conflation_shapely_patch.py",
+    "sha256": "005352b89c9e700d364918192f4ef24da3fb87b7bd95fc099af3020a67bcb678"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/train.py",
+    "sha256": "2e0abb236090cb5e1d880b49d7675d23d5df43dde2414cd2e527d002e8955203"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/models/utils.py",
+    "sha256": "cd49ad07ee586cd9519e09244d01b71224fbf314d73dc667ad694f7e4aa26689"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/train.py",
+    "sha256": "99b6dc09c6706c5d3f4022772e3b15f03a4db9566ab14b0f5c853d2bf6c0dc2e"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/trainer.py",
+    "sha256": "e49a707713011c4084d08c68eac13a3d20183a8c578864b1df1f60d31777c70e"
+  },
+  {
+    "source": "ldtr",
+    "path": "third_party/ldtr/utils.py",
+    "sha256": "f99ff6e61d60c11b8d222aaddc470f4a46cc96bfaac25075e0d6272b23e6fa6d"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/.gitignore",
+    "sha256": "c3f9ce2db04bd94626d57d0b99d0eb602902afbd3e1bd387140e992024fc0c76"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/.gitmodules",
+    "sha256": "a1041603cf757adb797f4c1f65eca07e967be43e6a10bc4399515c5f6f9e64f4"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/LICENSE",
+    "sha256": "fb8ac8585199fe3eb072ad79d9b523d88890c31d8cb36dc555b5e66f9614022c"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/README.md",
+    "sha256": "0898115b9f153e42200aa8f93027d4abd2267c581b0bc3329a125cf21e88ebcf"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale/data_split.json",
+    "sha256": "83a7b7141d21c194a35773a001a1e83c992b640bf6eec7f067174cf91b615341"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale/generate_labels.py",
+    "sha256": "865a689dea8c968cfcacec5fdbf5268d712bc35c111d062c99dfede7ee53732c"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale/process_data.sh",
+    "sha256": "4d3ef83e20df82da29b0ce300a4929029c317246d8f9840691496425fdc24704"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/apls.bash",
+    "sha256": "e773ef0f5272d2fb39326520fd50354db8ab3a8a5924f5deec28718a872d6ef2"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/apls.py",
+    "sha256": "bef04bf5fff10d507dbfba8c6e7bcd6f7bb910f213ebcc948de7c9c7b86df716"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/apls/README.md",
+    "sha256": "003d142d4fb6eab8c96a5e1b8ed349b3f8765f04a73e4ce2743b19d85697f2d9"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/apls/convert.py",
+    "sha256": "1b7464a7a490a96a6df1968b51dc68ea5207ee961742f3311f260a28e36881ec"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/apls/main.go",
+    "sha256": "8f584584e5b769d6d988a7cf744d21a1d03d38442316bf043c9fc945addcf3f2"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/eval_schedule.bash",
+    "sha256": "a2589bd7c32fa4a8768d3a7bf3d546a4d6dba5b40009ffb9b4f13683cbe9c88b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo.bash",
+    "sha256": "00e6a36156414c18edd1fb0a52df054c7c84f29d8e01fc4c0fb9c736d3ef8ceb"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo.py",
+    "sha256": "3546369739738c7d316621671731874fa9fea5f724dc29a22471925232bc0f13"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo/README.md",
+    "sha256": "db3b86737fcfa73ab2eaec939c5e1f05aec57c88531a6e20546060ff3e1967d3"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo/graph.py",
+    "sha256": "a6e80b9cfd6f2269c68ff35815c23cb914b070d56e367766a5d35aaf74e8a073"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo/main.py",
+    "sha256": "fe01254e54940903f34fd709c9ad8a0e59bf174f61bed56df6689004f9c1f906"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo/showTOPO.py",
+    "sha256": "4f4cc923ae6b7787df61ed8070514abd191fe32b3b6d28df2b0c36dab291470f"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/cityscale_metrics/topo/topo.py",
+    "sha256": "b42d17172e5c9ef17453d3ed4d7e878a974abac56d20b18c25d4484db681fa76"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/basic.yaml",
+    "sha256": "5462b277420bdd8e4d9ca6551ff98b40810629c46b2f6ee92153b24b2f5669e3"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_1024.yaml",
+    "sha256": "836a8afcc36c9f795788103c5a277a40d794f1761d6b6fc1fa300d8fb3c1aa44"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_1024_001.yaml",
+    "sha256": "60c10f1457e67d7257dc5ab854b7ce308c614ea50585e57365110aed2a073618"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_1024_focal.yaml",
+    "sha256": "fc65a1383bdfe3242848720234dab429edde8ca20a5cac36790ff46bfe78a20b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_256.yaml",
+    "sha256": "b23ea1aae4c38de7dcf3d74409f81aa1cb406e6b5bae8dfd0a6214274232e47e"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_dec_1024.yaml",
+    "sha256": "1903f9de4060dd34ef47414416a557f4dc96436fd25900f9452abbe4147c35ff"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_dec_256.yaml",
+    "sha256": "30f56c2a4356fa1e566d7fec9f9696e8c4c407f1d0f436e101d29b75688f984f"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/finetune_enc_dec_512.yaml",
+    "sha256": "84042fb0de7daa1c1ed3c49050e9534703a563da3fb087148f05403208c3f24e"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_1024_focal.yaml",
+    "sha256": "b95e94524ed672681d417d0fe330947dd4f8d14da9153045ad9e7593036b006b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_256.yaml",
+    "sha256": "fb33250c11001d55d36f7b77498cfb199f68c078a623afa3ab7b743c61e1a14d"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_256_focal.yaml",
+    "sha256": "8aa75655571cc2d68f0a6476b105ff1ccfeb589d7f65ffb048afcce5c5394293"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_512.yaml",
+    "sha256": "19455b76cd656ad385490a0991e82b482355413a4dbec46874fb0f5c63da396a"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_r16_dec_512.yaml",
+    "sha256": "320cf1e485ec1f97ae71488d2ec9fe8997fcb0fbf3029f2b74aa43f19e59e004"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_r4_dec_512.yaml",
+    "sha256": "65d3dac386b3271e510e6535a2c4ae66901cd3b4172c42ea1e2c7847104fba6e"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/archived/lora_enc_r8_dec_512.yaml",
+    "sha256": "0bfb347e50161a9e96e979f8d6f1f16aaceef3bbebcd51a9e5aeb9472d49f468"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_1024.yaml",
+    "sha256": "a002f41cb809c880428acf75da2f04411867ae2572d7fc0b9fe42e4928d96e8d"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_256.yaml",
+    "sha256": "b55b54d51a3a9221935f600aa90574d2ff879677bada2c6d3ef3c0df68d51016"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_256_spacenet.yaml",
+    "sha256": "f9f3bfbe8417da39b4014a881c59292971796b77917bcec2fac69abb4e6fe1a0"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_256_spacenet_4x4.yaml",
+    "sha256": "439322b4ae04a13f49914000e8148bc446adbc140dace11af767f9cf5e9640dd"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_256_spacenet_8x8.yaml",
+    "sha256": "6f95735fee2a6444d6c67ab200897e7d8fc0a6cab05ed45bb4daa39c16276cdb"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale.yaml",
+    "sha256": "c2319f8478d39f4d435a6f48d64f3d7c11e76e2bbdbed306542175fc2c8e2d6c"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_4x4.yaml",
+    "sha256": "f82d88c3fbe70cd66fc8fedee2ef256f6e2c9a22745b1f80d9d02b3e69d9ab36"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_8x8.yaml",
+    "sha256": "626733146f6fdc81450b0f06ba3084bc7c4bac00fdd5e0e6c0498586f2dad950"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_no_offset.yaml",
+    "sha256": "b308e38fe93ea263f5df7680e65949ba094cbe01b2110d34bba53d9f14719f5e"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_no_sam.yaml",
+    "sha256": "c64e4316a507357294f8c2bd03832d1fd9f432ea4691b69d720371ef05eb1fc0"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_no_tgt_features.yaml",
+    "sha256": "d6e888e0c42720a9e6cf4b6b33a202e37c32e1218e4e6b1f62a64c314c1d7e40"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_no_transformer.yaml",
+    "sha256": "862b34bbcf8e7fc5a17c0d8365e1b83d49824675be1e08f848fe9fc82a0ce9d1"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitb_512_cityscale_viz.yaml",
+    "sha256": "6caa9ebe0e6be221aff58d1e4adb5b1e6d29064df1f9679757adb7a775104a4b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vith_256.yaml",
+    "sha256": "99581f95f2296573fca63c24f4e1dbbe043d84e0fd2c28bf0fb21f5e3af7c534"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/config/toponet_vitl_256.yaml",
+    "sha256": "8e6575b9386781a824818fbe71457b471c1ae02b5cbbfb117cd97482fe294c6b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/dataset.py",
+    "sha256": "1a641a6839ab0c7d2a91512cb0b4d172fded0332fd514ab133bd3449553902d8"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/graph_extraction.py",
+    "sha256": "c86a7f240b178d89ee5eb1c462e80c53dcbe3a3f64be43bfc1d849ef62845e10"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/graph_utils.py",
+    "sha256": "fe5b12c6520d79f46f00d96da76c4d0dab3f38e75a4c6e8048bfaf0b4130b693"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/imgs/sam_road_cover.png",
+    "sha256": "ee5dc6d14e90bee597c2d4bad8a65be92e7cd6bbe952306c1279c51bc36babdb"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/imgs/sam_road_mask_and_graph.png",
+    "sha256": "5a336353aa5bf9de45dc2b6b1177dc07c3d8cec9d338478fb3da7a29b009e111"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/inferencer.py",
+    "sha256": "362e3b09d0ce677184665f990e25e84016628cf9880d24e9870adecb313e0c8d"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/model.py",
+    "sha256": "f101051ec2ff6eaee22740137b02c8b71f5d698080100b34df6c989fb1516b39"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet/data_split.json",
+    "sha256": "ce7f3fd5256638e27e895d0a0ae7073395853a267e18a565e2919228de8654d9"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet/generate_labels.py",
+    "sha256": "c5734f5512209fbf48da6ed934987178cbab85362cf827947e0050eb65623811"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/.gitignore",
+    "sha256": "468c4ba7c0cd1d6ca77dd60cd8f4380e61657bae527c651f2331173cf7296071"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/apls.bash",
+    "sha256": "42565dc9745016218ab8284b0c8a9ad6869a6e6d82bf2ebb8a1108f7cb84ea16"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/apls.py",
+    "sha256": "54ffcaff82b369eda6179df77af81e51ee1b72b47ca38d432dd9134ecfa5139b"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/apls/README.md",
+    "sha256": "003d142d4fb6eab8c96a5e1b8ed349b3f8765f04a73e4ce2743b19d85697f2d9"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/apls/convert.py",
+    "sha256": "1b7464a7a490a96a6df1968b51dc68ea5207ee961742f3311f260a28e36881ec"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/apls/main.go",
+    "sha256": "40bd9b3278f48e8b3475ebd76f7bef4f66854e6a224a4e4fe9e5b34df5bd926e"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/eval_schedule.bash",
+    "sha256": "4c2ccb2fa2a7961415e78a1f27bcc5538a8363433822b1c1750529058def839d"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/gt.json",
+    "sha256": "b52bf724c9d2eaba4406024c1def5fbe740efe4e1d3a463bca94c3d33da522d1"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/prop.json",
+    "sha256": "2d29489aa55f888ff6bdc57b3e1f281899b2be3c5ef55ec2cf4a0fd872321350"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/spacenet_convert.py",
+    "sha256": "b3ef5af4686169f9712b3b5f882bc531464e7ff6205004be4b50fca70bbb5497"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo.bash",
+    "sha256": "b49b954fca6739b8a3e7feecf970845ff0652f42664d0c25edd95952f7814892"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo.py",
+    "sha256": "0861e888e84669e6746f8ee787a121fb84ba2adb7791e3e5fcbc2c8abab45698"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo/README.md",
+    "sha256": "db3b86737fcfa73ab2eaec939c5e1f05aec57c88531a6e20546060ff3e1967d3"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo/graph.py",
+    "sha256": "a6e80b9cfd6f2269c68ff35815c23cb914b070d56e367766a5d35aaf74e8a073"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo/main.py",
+    "sha256": "fb9e1ad3745f168ee683815083a56f086a6c6bbc82c07902300cab02b0e4eebc"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo/showTOPO.py",
+    "sha256": "4f4cc923ae6b7787df61ed8070514abd191fe32b3b6d28df2b0c36dab291470f"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/spacenet_metrics/topo/topo.py",
+    "sha256": "c80421e292e7856331d8f6599cf39c448729d86b3aca6880a4b6f01391af53ab"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/test.py",
+    "sha256": "4d73f6c9a410ab9b645a091c07682b3ef5b55ec297059ea5d114187e313cb1ff"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/train.py",
+    "sha256": "12305a386cb2786971a14e5ad832089d7a6e6579a89fd56ea2211ebb3c766bd3"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/triage.py",
+    "sha256": "deefdbda64e871ca40ec791386e3e66adcbb733cc867a43266d9bad58a91fcf7"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/utils.py",
+    "sha256": "14b0ced1bcfcf773c30c0498f11065f5fe5309bec4a56073665526aabcf54122"
+  },
+  {
+    "source": "sam_road",
+    "path": "third_party/sam_road/vitdet.py",
+    "sha256": "9c6417c28612861d6d057b983c1e156e7589faf7d3e9f5aa0e6fef12c4af11d4"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/.flake8",
+    "sha256": "dca6883639e28760c91d18bf835b3616f64f2c9c07ba14376adf7fa400d72743"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/.gitignore",
+    "sha256": "36f3987a7f7f7289a8520350d3776410300bef8df94892236d23790a674fd03b"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/CODE_OF_CONDUCT.md",
+    "sha256": "d4d00a8ac00c1735cd2f3fb50ca67c83960ef9123fc5656f2e69056c905ed244"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/CONTRIBUTING.md",
+    "sha256": "8d9d12cc7fcbc300c4f8c55dea9834bd917745eecdb2fbc8ff58cb21636aa0af"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/LICENSE",
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/README.md",
+    "sha256": "233748215bfcbbe467d768f11ec3189415a2bea14364a05373b4cc00247e728e"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/masks1.png",
+    "sha256": "094650248317c2b41ca0279d402253a8d1ae3801f8809e69480561dddd7d9f64"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/masks2.jpg",
+    "sha256": "96d80aae8cae21e6fa9d8081b99cb3ef68d513281f2ec4e360a4e2b3f7e6010c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/minidemo.gif",
+    "sha256": "44ab93e0b59551a3c649cc8a38eb9760545285110f515673c5e7d1e85354125c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/model_diagram.png",
+    "sha256": "80f88ccc64fdefc08b28682661b41832e25e4c1612e7e430dc30ed551ee51d86"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/notebook1.png",
+    "sha256": "ff397cd575c022eb66fa48e2229eff78035bb144df20fc9df91548f53906b47c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/assets/notebook2.png",
+    "sha256": "bdffadfdddee81d090ec130566eae7de6de0c6d6b2be85974860327c5d860fcc"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/README.md",
+    "sha256": "a17f8a377e16a377b42932cdeeacab7a84afed5a2ef29907c0427ae5a493fed8"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/configs/webpack/common.js",
+    "sha256": "f085261110597dbe9bb6ea75920597a2da413257cba5e99d81aa55385a87b6c9"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/configs/webpack/dev.js",
+    "sha256": "94aeca1a07f6f02b210f7c020b9b549bff38aebfd68931ea04721a7b61e57714"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/configs/webpack/prod.js",
+    "sha256": "5c6be50b1f09763b0176abda1215cff8aed5f2d6fa30b5b57750b47a5fa5ad20"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/package.json",
+    "sha256": "14f1d1233224c35e71f48cbede096eca89187bb0dc829fce0f380b0c68bfc98c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/postcss.config.js",
+    "sha256": "e37ff61d56715fd068fa87ea291ccc249da1d9c3b745ab58763f8bba3f9aa776"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/App.tsx",
+    "sha256": "aab0d86de97774277aca46d1d81696176b2e0cbb68595d36ee33d7f869dd7380"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/assets/data/dogs.jpg",
+    "sha256": "49b29517d3a6457bf8bd0b83a80cbeb24c2466bf3e5804bd503ebe60e430d784"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/assets/index.html",
+    "sha256": "855449a290c63a7b952cfdb37052d6208e03411f620348c7c37ea012982b684f"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/assets/scss/App.scss",
+    "sha256": "cc1a7ad0d019ddb1d32d0ecb588ba0ac26ce41d8625dd6c366348b25f83a28ec"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/Stage.tsx",
+    "sha256": "3a3f0d0c911a2395c13fe4249ac51f8f46db6843ded73af645c1c9f089dca140"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/Tool.tsx",
+    "sha256": "0162bdbd5adaf79ce8f42f7f65d9127eb744a97febb86471c870fd62821951ed"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/helpers/Interfaces.tsx",
+    "sha256": "4f5f260ab2e60b64948cc7f707f04d02fa2caa1af27b505a2cb24278aff1ad46"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/helpers/maskUtils.tsx",
+    "sha256": "b8de4ea63fc84e0e10410a6169e9613b22987dc8477d44979f14fba440fdec85"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/helpers/onnxModelAPI.tsx",
+    "sha256": "6f52424953656fcbc125f1dddaf0f64623ff74f6c7b4c0b742c604974ff0e07c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/helpers/scaleHelper.tsx",
+    "sha256": "7c09c180931fb43baedd6c5b240879fa1b5613cf08f6621fb7353ac3d4f97651"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/hooks/context.tsx",
+    "sha256": "17cf1e683e30ffc56a3017eb62f86f195ebffda3d82181c0614b7ef71f522cab"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/components/hooks/createContext.tsx",
+    "sha256": "4daa14ae82a774ca78f99a7fecafe088e1337e527399baabca37721484762705"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/src/index.tsx",
+    "sha256": "32ef6d97f2e12b9f60669c036367e9c9b214ce262a5ff6c12e7ffd1120004985"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/tailwind.config.js",
+    "sha256": "996d1ac894296cf3137afa8b2cf66432e31fb3db31d6e9980a4873d257721ca7"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/demo/tsconfig.json",
+    "sha256": "fa7fabbae4db7cfd6a63e1b60a50c64b8c0ed81ea7527c9bd4d2e2824e6f68d5"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/linter.sh",
+    "sha256": "de55131fe5f32874b314502a3f940036691f7e1fa166d17941eccb869a139d92"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/automatic_mask_generator_example.ipynb",
+    "sha256": "9a5d3ccba33a3cf28f6f7d3cc661313238346bd146ffb2e2843ab2b8463cc824"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/images/dog.jpg",
+    "sha256": "bf76876b90e3ebd521f9882b9177ba8f33e80cb7ec09c630f179b122edd125e1"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/images/groceries.jpg",
+    "sha256": "7073dfecb5a3ecafb6152124113163a0ea1c1c70f92999ec892b519eca63e3d3"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/images/truck.jpg",
+    "sha256": "941715e721c8864324a1425b445ea4dde0498b995c45ddce0141a58971c6ff99"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/onnx_model_example.ipynb",
+    "sha256": "0468449922eab9aaefe788a5e9da01b7756fb15795eaef71af71e0b590afb816"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/notebooks/predictor_example.ipynb",
+    "sha256": "dd02280bcd3aab53ecb8fec3c808fc6b8976d094e6dba93d8e53b1a5f62a5752"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/scripts/amg.py",
+    "sha256": "24b3edd3f3880e75b64d2b8d67e1b7d9519f46f6479d1137c9ac3309e9d43105"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/scripts/export_onnx_model.py",
+    "sha256": "c0270d82d96cfb3348471f349b6cb5b224833a0ea101bd8091dc5c364695b3b2"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/__init__.py",
+    "sha256": "c8d8eb649610b2d51f138481a89617a3dcb61106465121dcb1c2f23affc84c30"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/automatic_mask_generator.py",
+    "sha256": "71c698d2b6cbf5a62eafa5f12106fdf3bff676102adf1aed2287df3b3990b4e0"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/build_sam.py",
+    "sha256": "77bc4faf728118625ddd184dc4e6375bd1b5c636fc66fb429f9fc5276f331cc5"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/__init__.py",
+    "sha256": "47f6363b86c0bfaa7a6abf723975136d17fae4a5f002d2814a5cce8834d18980"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/common.py",
+    "sha256": "59a53bfa5d0a4d446df7f2bb57d2e95808b130601592b934600fb663d256ce17"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/image_encoder.py",
+    "sha256": "1665ada2902722c9a8cd566c840e324d623ef2b12f7d9ae9f38b24aed0e39886"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/mask_decoder.py",
+    "sha256": "6a2455e990515c67a061187c92c236b879b189f21ef6ebfce1627cae9a6b2f93"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/prompt_encoder.py",
+    "sha256": "bd8f2f5903f0647f55c21c608bcbb334eec2901ebe76aa41061b1c513df4a06f"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/sam.py",
+    "sha256": "2d501173b7345f6829f745a2ade240c98026f6b3237bf6cf8e9473405e86c54e"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/modeling/transformer.py",
+    "sha256": "566a8f6db8b608398de939548bd0f485b21752fda2bdda36900e6444ef938d11"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/predictor.py",
+    "sha256": "ab66c29ac0b5b204d23997ef49d8a2476f71b596ce97e35efbf116cfc2118fce"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/utils/__init__.py",
+    "sha256": "34bd8069c54764e7b8d73a78905dbe6467140a2f73170875128f6ca4d8cdd0aa"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/utils/amg.py",
+    "sha256": "5c10f8dd63facb642ff090f61426b35b3c6c3a07e72839595cb04d74828b1d39"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/utils/onnx.py",
+    "sha256": "b4410ac1dc9a7bb3a09827520fa08454f9b397608775e2fe4ebfb7c8dbb02666"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/segment_anything/utils/transforms.py",
+    "sha256": "26a649f2bca8a4a24b4d56617487a9a54c4279e559b2b813c9de38f58a60107c"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/setup.cfg",
+    "sha256": "ca25a496fbec2b44f7747d9bc64c206a0cd6a447a1452611f756a56658cc2395"
+  },
+  {
+    "source": "sam",
+    "path": "third_party/sam_road/sam/setup.py",
+    "sha256": "be8672c2c99f3295d25721faa4524b314c8c08965d853e55fc42183b809d3842"
+  }
+]

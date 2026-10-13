@@ -1,9 +1,13 @@
-# Third-party sources
+# Third-party source code
 
-Exact source commits are in `sources.json`. Existing file-level copyright notices are retained.
+| Source | Included snapshot | Revision |
+|---|---|---|
+| [LDTR](https://github.com/knowledge-computing/LDTR) | `third_party/ldtr/` | `eaf5c9f3e66ca0181ea98fe4378420107b8af296` |
+| [SAM-Road](https://github.com/htcr/sam_road) | `third_party/sam_road/` | `04b67c503f120ecff2b2dc5a2041ea6d300e306a` |
+| [SAM](https://github.com/htcr/segment-anything-road) | `third_party/sam_road/sam/` | `6fdee8f2727f4506cfbbe553e23b895e27956588` |
 
-- `src/trasa/vendor/ldtr`: selected models/ops files from knowledge-computing/LDTR. The upstream repository has no top-level LICENSE at the pinned commit. Its transformer/attention files carry Deformable DETR / DETR copyright and Apache-2.0 notices; those projects' license texts are included as `LICENSE_DEFORMABLE_DETR` and `LICENSE_DETR`. No new license is asserted for the entire upstream LDTR repository.
-- `src/trasa/vendor/segment_anything/modeling`: the SAM modeling package from SAM-Road's exact `sam` submodule revision. Its Apache-2.0 license is included as `segment_anything/LICENSE` and `SAM_LICENSE`.
-- `src/trasa/geometry.py`: geometry construction and decoder layout follow SAM-Road's released model; SAM-Road's MIT license is retained as `SAM_ROAD_LICENSE`.
+The snapshots retain upstream source, configurations, training/inference code, preprocessing, evaluation and documentation. Generated Python bytecode and package-build metadata are excluded. SAM-Road's two SAM submodule names reference the same included SAM tree. `upstream-files.json` records SHA256 for every included source/reference file; tests verify these contents.
 
-TRASA-specific model composition, data contract, objectives, runtime, CLI, graph operations and tests are added here. The snapshot does not assign a new blanket license to unrelated upstream material or manuscript text.
+TRASA imports the adapted transformer/attention and SAM modeling components from `src/trasa/vendor/`, avoiding dependencies on the upstream experiment frameworks during normal execution. Adaptations include a differentiable attention fallback, explicit meshgrid indexing, a five-channel backbone, separate NTC, corrected empty-graph handling, frozen geometry and portable experiment entry points. Complete upstream snapshots provide the original baseline implementations and a reference for these changes; they are not imported implicitly.
+
+File-level copyright notices and upstream license texts are retained. SAM-Road is MIT licensed; SAM and the Deformable DETR/DETR components carry their included Apache-2.0 licenses. The pinned LDTR repository has no top-level license; its existing notices remain unchanged. No blanket license is assigned to unrelated upstream material.

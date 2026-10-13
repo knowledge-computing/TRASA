@@ -1,4 +1,4 @@
-"""Training entry point; implementing this does not launch paper experiments."""
+"""Train the TRASA graph model and controlled ablation variants."""
 import argparse
 import json
 from dataclasses import replace
@@ -86,6 +86,7 @@ def main(argv=None):
             if not config.guidance:
                 raise ValueError('Geometry checkpoint supplied to RGB-only ablation')
             geometry = SAMRoadGeometry(config.patch_size, args.sam_variant, args.sam_decoder).load_checkpoint(args.geometry_checkpoint)
+            geometry.validate_provenance(train.guidance_provenance)
         model = TRASA(config, geometry).to(args.device)
     optimizer = torch.optim.AdamW([p for p in model.parameters() if p.requires_grad],
                                   lr=config.learning_rate, weight_decay=config.weight_decay)

@@ -1,1 +1,1 @@
-"""TRASA paper implementation. Legacy IMOLA scripts are not imported."""
+"""TRASA road graph extraction."""

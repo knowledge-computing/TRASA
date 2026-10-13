@@ -60,7 +60,10 @@ class PatchDataset(Dataset):
         """Hash actual image, graph and mask contents, not just their filenames."""
         digest = hashlib.sha256(self.path.read_bytes())
         for row in self.samples:
-            for key in ('image', 'graph', 'guidance') if self.use_cached_guidance else ('image', 'graph'):
+            keys = list(('image', 'graph', 'guidance') if self.use_cached_guidance else ('image', 'graph'))
+            if row.get('road_mask'):
+                keys.append('road_mask')
+            for key in keys:
                 path = self.path.parent / row[key]
                 digest.update(row['id'].encode())
                 digest.update(key.encode())

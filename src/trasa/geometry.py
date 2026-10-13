@@ -51,6 +51,7 @@ class SAMRoadGeometry(nn.Module):
         self.register_buffer('pixel_std', torch.tensor([58.395, 57.12, 57.375])[None, :, None, None], persistent=False)
         self._checkpoint_loaded = False
         self.checkpoint_path = None
+        self.provenance = None
         self.requires_grad_(False)
         self.eval()
 
@@ -76,12 +77,26 @@ class SAMRoadGeometry(nn.Module):
             raise ValueError('LoRA geometry checkpoints require explicit conversion; not the default paper geometry')
         self._checkpoint_loaded = True
         self.checkpoint_path = str(Path(path).resolve())
+        self.provenance = checkpoint.get('provenance')
         return self
+
+    def validate_provenance(self, declared):
+        if self.provenance:
+            for key in ('training_map_ids', 'keypoint_semantics'):
+                actual, supplied = self.provenance.get(key), declared.get(key)
+                if key == 'training_map_ids':
+                    actual, supplied = sorted(actual or []), sorted(supplied or [])
+                if actual != supplied:
+                    raise ValueError(f'Geometry checkpoint provenance disagrees with {key}')
 
     @torch.no_grad()
     def forward(self, rgb):
         if not self._checkpoint_loaded:
             raise RuntimeError('Load a trained SAM-Road geometry checkpoint before generating guidance')
+        return self.mask_logits(rgb).sigmoid()[:, [1, 0]]
+
+    def mask_logits(self, rgb):
+        """SAM-Road channel order [keypoint, road]; gradients used in pretraining."""
         if rgb.ndim != 4 or rgb.shape[1:] != (3, self.patch_size, self.patch_size):
             raise ValueError('RGB shape must match the geometry checkpoint patch resolution')
         if not torch.isfinite(rgb).all() or rgb.min() < 0 or rgb.max() > 1:
@@ -97,4 +112,4 @@ class SAMRoadGeometry(nn.Module):
         else:
             logits = self.map_decoder(embeddings)
         logits = F.interpolate(logits, rgb.shape[-2:], mode='bilinear', align_corners=False)
-        return logits.sigmoid()[:, [1, 0]]
+        return logits

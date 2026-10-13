@@ -4,9 +4,10 @@ __pycache__/
 .venv/
 build/
 dist/
-data/
-checkpoints/
-runs/
+/data/
+/checkpoints/
+/runs/
+/results/
 *.pth
 *.pt
 *.ckpt

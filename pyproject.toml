@@ -4,13 +4,18 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "trasa"
-version = "0.1.0"
+version = "0.2.0"
 description = "Dual-mask-guided transformer road graph extraction"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["torch==2.5.1", "torchvision==0.20.1", "numpy==2.2.6", "scipy==1.15.3", "Pillow==12.0.0", "PyYAML==6.0.3", "shapely==2.1.2"]
 
+[project.urls]
+Repository = "https://github.com/knowledge-computing/TRASA"
+
 [project.optional-dependencies]
 test = ["pytest==9.0.2"]
+data = ["vtk==9.3.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
