@@ -1,6 +1,7 @@
 """Train the TRASA graph model and controlled ablation variants."""
 import argparse
 import json
+import time
 from dataclasses import replace
 from pathlib import Path
 
@@ -13,6 +14,8 @@ from .geometry import SAMRoadGeometry
 from .losses import GraphCriterion
 from .model import TRASA
 from .runtime import load_model, restore_training_state, save_checkpoint, seed_everything, sha256
+from .provenance import partitions, record_run, source_fingerprint, write_json
+from .validate_data import validate_dataset
 
 
 def run_epoch(model, loader, criterion, device, optimizer=None):
@@ -47,6 +50,7 @@ def main(argv=None):
     parser.add_argument('--sam-variant', default='vit_b', choices=['vit_b', 'vit_l', 'vit_h'])
     parser.add_argument('--sam-decoder', action='store_true')
     parser.add_argument('--ablation', choices=['ldtr', 'ldtr-sam', 'ldtr-ntc', 'trasa'], default='trasa')
+    parser.add_argument('--max-epochs-this-run', type=int, help='Stop cleanly after this many epochs; retain the full configuration for resume')
     args = parser.parse_args(argv)
     config = Config.load(args.config)
     config = replace(config, guidance=args.ablation in ('trasa', 'ldtr-sam'),
@@ -59,10 +63,16 @@ def main(argv=None):
     online = bool(args.geometry_checkpoint)
     train = PatchDataset(args.manifest, 'train', config, not online)
     val = PatchDataset(args.manifest, 'val', config, not online)
+    report = validate_dataset(args.manifest, config, splits=('train', 'val'), guided=config.guidance and not online)
+    if not report['valid']:
+        reason = 'Resume data provenance changed' if args.resume else 'Training data validation failed'
+        raise ValueError(f'{reason}: {json.dumps(report)}')
     provenance = {'manifest_sha256': sha256(args.manifest),
                   'train_content_sha256': train.fingerprint(), 'val_content_sha256': val.fingerprint(),
                   'guidance_provenance': train.guidance_provenance,
-                  'torch': torch.__version__, 'device': args.device}
+                  'torch': str(torch.__version__), 'device': args.device,
+                  'map_partitions': partitions(train.document), 'dataset_kind': train.document.get('dataset_kind', 'unverified'),
+                  'variant': args.ablation, 'implementation_sha256': source_fingerprint()}
     if online:
         expected = (train.guidance_provenance or {}).get('checkpoint_sha256')
         if expected != sha256(args.geometry_checkpoint):
@@ -93,10 +103,19 @@ def main(argv=None):
     if args.resume:
         restore_training_state(state, optimizer, generator)
     criterion = GraphCriterion(config)
-    for epoch in range(start, config.epochs):
+    record_run(output, config.asdict(), provenance, args.device)
+    if args.max_epochs_this_run is not None and args.max_epochs_this_run < 1:
+        raise ValueError('max-epochs-this-run must be positive')
+    stop = min(config.epochs, start + args.max_epochs_this_run) if args.max_epochs_this_run else config.epochs
+    for epoch in range(start, stop):
+        started = time.perf_counter()
         train_losses = run_epoch(model, loader, criterion, args.device, optimizer)
         val_losses = run_epoch(model, validation, criterion, args.device)
-        row = {'epoch': epoch, 'train': train_losses, 'val': val_losses}
+        from .predict_dataset import predict_dataset
+        validation_results = predict_dataset(model, val, config.batch_size)
+        row = {'epoch': epoch, 'train': train_losses, 'val': val_losses,
+               'val_metrics': {key: item['metrics'] for key, item in validation_results.items()},
+               'elapsed_seconds': time.perf_counter() - started}
         improved = val_losses['total'] < best
         best = min(best, val_losses['total'])
         save_checkpoint(output / 'last.pt', model, optimizer, epoch, generator, provenance, best)
@@ -104,6 +123,8 @@ def main(argv=None):
             save_checkpoint(output / 'best.pt', model, optimizer, epoch, generator, provenance, best)
         with (output / 'history.jsonl').open('a') as stream:
             stream.write(json.dumps(row) + '\n')
+        write_json(output / 'run_status.json', {'completed_epochs': epoch + 1, 'planned_epochs': config.epochs,
+                                               'complete': epoch + 1 == config.epochs})
         print(json.dumps(row), flush=True)
 
 

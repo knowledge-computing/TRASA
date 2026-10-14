@@ -24,8 +24,19 @@ def test_five_channel_stem_preserves_pretrained_filters():
 
 def test_full_paper_forward_backward_and_frozen_masks():
     model = TRASA(config())
+    pyramid = []
+    relation_queries = []
+    handle = model.transformer.register_forward_pre_hook(lambda _, args: pyramid.extend(x.shape for x in args[0]))
+    relation_handle = model.transformer.decoder.layers[0].cross_attn1.register_forward_pre_hook(
+        lambda _, args: relation_queries.append(args[0].shape[1]))
     guidance = torch.rand(1, 2, 128, 128, requires_grad=True)
     out = model(torch.rand(1, 3, 256, 256), guidance)
+    handle.remove()
+    relation_handle.remove()
+    assert pyramid == [torch.Size([1, 256, size, size]) for size in (32, 16, 8, 4)]
+    assert relation_queries == [100]  # the relation token avoids image cross attention in pinned LDTR
+    assert model.query_embed.weight.shape == (101, 512)
+    assert len(model.transformer.encoder.layers) == len(model.transformer.decoder.layers) == 3
     assert out['pred_logits'].shape == (1, 100, 2)
     assert out['pred_nodes'].shape == (1, 100, 2)
     assert out['pred_types'].shape == (1, 100, 4)

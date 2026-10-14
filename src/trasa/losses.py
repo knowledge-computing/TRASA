@@ -42,8 +42,10 @@ class GraphCriterion(nn.Module):
             nodes = target['nodes'].to(outputs['pred_nodes'])
             edges = canonical_edges(target['edges'], len(nodes)).cpu()
             roles = node_types(len(nodes), edges).to(types.device)
-            if 'types' in target and not torch.equal(target['types'].to(roles), roles):
-                raise ValueError('Reference node types must match the patch graph degrees')
+            if 'types' in target:
+                supplied = torch.as_tensor(target['types'], device=roles.device)
+                if supplied.shape != roles.shape or not torch.isfinite(supplied).all() or (supplied != supplied.long()).any() or not torch.equal(supplied.long(), roles):
+                    raise ValueError('Reference node types must be integers matching the patch graph degrees')
             valid[batch, query] = 1
             types[batch, query] = roles[reference]
             coordinate_loss = coordinate_loss + F.l1_loss(outputs['pred_nodes'][batch, query], nodes[reference], reduction='sum')
@@ -65,11 +67,19 @@ class GraphCriterion(nn.Module):
                 conn_labels.append(torch.zeros(len(query_pairs), dtype=torch.long))
             else:
                 continue
-            edge_logits.append(model.pair_logits(outputs, batch, query_pairs))
-            conn_logits.append(model.pair_logits(outputs, batch, query_pairs, connectivity=True))
+            if self.config.pair_training == 'random_order':
+                def ordered_pairs(pairs):
+                    swap = torch.rand(len(pairs), device=pairs.device) < 0.5
+                    return torch.where(swap[:, None], pairs.flip(-1), pairs)
+                edge_logits.append(model.pair_logits(outputs, batch, ordered_pairs(query_pairs), symmetrize=False))
+                conn_logits.append(model.pair_logits(outputs, batch, ordered_pairs(query_pairs), connectivity=True, symmetrize=False))
+            else:
+                edge_logits.append(model.pair_logits(outputs, batch, query_pairs))
+                conn_logits.append(model.pair_logits(outputs, batch, query_pairs, connectivity=True))
         classification = F.cross_entropy(outputs['pred_logits'].transpose(1, 2), valid,
                                          weight=outputs['pred_logits'].new_tensor(self.config.node_class_weights))
-        losses = {'node': classification + coordinate_loss / max(node_count, 1)}
+        losses = {'node': self.config.validity_loss_weight * classification +
+                  self.config.coordinate_loss_weight * coordinate_loss / max(node_count, 1)}
         zero = outputs['node_embeddings'].sum() * 0
         if edge_logits and sum(len(x) for x in edge_logits):
             pred_edges, pred_conn = torch.cat(edge_logits), torch.cat(conn_logits)
@@ -80,7 +90,7 @@ class GraphCriterion(nn.Module):
             losses['edge'] = zero + sum(p.sum() * 0 for p in model.edge_head.parameters())
             losses['connectivity'] = zero + sum(p.sum() * 0 for p in model.connectivity_head.parameters())
         if self.config.ntc:
-            losses['type'] = F.cross_entropy(outputs['pred_types'].transpose(1, 2), types)
+            losses['type'] = F.cross_entropy(outputs['pred_types'].transpose(1, 2), types, reduction=self.config.type_reduction)
         else:
             losses['type'] = zero
         losses['total'] = (self.config.node_weight * losses['node'] + self.config.edge_weight * losses['edge']

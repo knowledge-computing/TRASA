@@ -43,6 +43,6 @@ def test_empty_merge_affine_and_tile_coverage():
     graph = make_graph([[0, 0], [1, 2]], [[0, 1]])
     transformed = georeference_graph(graph, [100, 2, 0, 200, 0, -2], 'EPSG:4326')
     np.testing.assert_allclose(transformed.nodes, [[101, 199], [103, 195]])
-    assert tile_origins(300, 300, 256, 256) == [(0, 0), (44, 0), (0, 44), (44, 44)]
+    assert tile_origins(300, 300, 256, 256) == [(0, 0), (256, 0), (0, 256), (256, 256)]
     with pytest.raises(ValueError):
         tile_origins(300, 300, 256, 300)

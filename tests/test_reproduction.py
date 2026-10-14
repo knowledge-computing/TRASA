@@ -78,7 +78,7 @@ def test_eight_map_schedule_and_benchmark_dry_run(tmp_path, capsys):
     assert {s['test'] for s in schedules} == set('ABCDEFGH')
     assert all(len(s['train']) == 6 and s['test'] != s['val'] for s in schedules)
     source = tmp_path / 'dataset.json'
-    source.write_text(json.dumps({'samples': [{'map_id': m, 'id': m, 'image': 'x.png', 'graph': 'x.json'} for m in 'ABCDEFGH']}))
+    source.write_text(json.dumps({'schema_version': 1, 'samples': [{'map_id': m, 'id': m, 'image': f'{m}.png', 'graph': 'x.json', 'origin': [0, 0], 'split': 'train'} for m in 'ABCDEFGH']}))
     output = tmp_path / 'folds'
     folds_main(['--manifest', str(source), '--output', str(output)])
     manifests = sorted(output.glob('fold_*.json'))
@@ -128,7 +128,7 @@ def test_geometry_pretraining_and_frozen_checkpoint_contract(monkeypatch, tmp_pa
 def test_geometry_keypoint_semantics_do_not_confuse_endpoints_with_intersections():
     target = {'nodes': torch.tensor([[.1, .1], [.5, .5], [.9, .9]]),
               'edges': torch.tensor([[0, 1], [1, 2]]), 'types': torch.tensor([1, 2, 1])}
-    keypoints = geometry_targets(target)[0]
+    keypoints = geometry_targets(target, semantics='degree_ne_2')[0]
     intersections = geometry_targets(target, semantics='intersection_only')[0]
     assert keypoints.sum() > 0 and intersections.sum() == 0
 

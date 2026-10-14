@@ -16,6 +16,8 @@ Repository = "https://github.com/knowledge-computing/TRASA"
 [project.optional-dependencies]
 test = ["pytest==9.0.2"]
 data = ["vtk==9.3.1"]
+baselines = ["scikit-image==0.25.2"]
+gis = ["pyproj==3.7.1", "fiona==1.10.1", "rasterio==1.4.3", "affine==2.4.0"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

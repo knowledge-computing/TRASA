@@ -2,6 +2,7 @@
 import argparse
 import json
 import random
+import time
 from pathlib import Path
 
 import numpy as np
@@ -15,16 +16,19 @@ from .config import Config
 from .data import PatchDataset
 from .geometry import SAMRoadGeometry
 from .runtime import seed_everything, sha256
+from .provenance import atomic_torch_save, record_run, source_fingerprint
+from .validate_data import validate_dataset
 
 
-def geometry_targets(target, patch_size=256, road_width=3, radius=3, semantics='degree_ne_2'):
+def geometry_targets(target, patch_size=256, road_width=3, radius=3, semantics='intersection_only'):
     if road_width < 1 or radius < 0 or semantics not in ('degree_ne_2', 'intersection_only'):
         raise ValueError('Invalid geometry label settings')
     nodes = target['nodes'].numpy() * (patch_size - 1)
     roads, points = Image.new('L', (patch_size, patch_size)), Image.new('L', (patch_size, patch_size))
     draw_road, draw_point = ImageDraw.Draw(roads), ImageDraw.Draw(points)
-    for a, b in target['edges'].tolist():
-        draw_road.line([tuple(np.rint(nodes[a]).astype(int)), tuple(np.rint(nodes[b]).astype(int))], fill=255, width=road_width)
+    widths = target.get('edge_widths', torch.full((len(target['edges']),), road_width))
+    for (a, b), width in zip(target['edges'].tolist(), widths.tolist()):
+        draw_road.line([tuple(np.rint(nodes[a]).astype(int)), tuple(np.rint(nodes[b]).astype(int))], fill=255, width=int(width))
     roles = target['types'].numpy()
     selected = roles != 2 if semantics == 'degree_ne_2' else roles == 3
     for x, y in nodes[selected]:
@@ -34,7 +38,7 @@ def geometry_targets(target, patch_size=256, road_width=3, radius=3, semantics='
 
 
 class GeometryDataset(Dataset):
-    def __init__(self, manifest, split, patch_size=256, road_width=3, radius=3, semantics='degree_ne_2'):
+    def __init__(self, manifest, split, patch_size=256, road_width=3, radius=3, semantics='intersection_only'):
         # Geometry training never consumes cached guidance or held-out labels.
         self.patches = PatchDataset(manifest, split, Config(patch_size=patch_size, guidance=False, ntc=False), False)
         self.patch_size, self.road_width, self.radius, self.semantics = patch_size, road_width, radius, semantics
@@ -48,10 +52,8 @@ class GeometryDataset(Dataset):
         width = int(row.get('road_width', self.road_width))
         labels = geometry_targets(sample['target'], self.patch_size, width, self.radius, self.semantics)
         if row.get('road_mask'):
-            with Image.open(self.patches.path.parent / row['road_mask']) as image:
-                mask = np.asarray(image.convert('L'), dtype=np.float32).copy()
-            if mask.max() > 1:
-                mask /= 255
+            from .data import read_road_mask
+            mask = read_road_mask(self.patches.path.parent / row['road_mask'], self.patch_size)
             if mask.shape != (self.patch_size, self.patch_size):
                 raise ValueError('Annotated road mask dimensions differ from patch')
             labels[1] = torch.from_numpy(mask)
@@ -111,7 +113,7 @@ def main(argv=None):
     parser.add_argument('--encoder-lr-factor', type=float, default=0.1)
     parser.add_argument('--road-width', type=int, default=3)
     parser.add_argument('--keypoint-radius', type=int, default=3)
-    parser.add_argument('--keypoint-semantics', default='degree_ne_2', choices=['degree_ne_2', 'intersection_only'])
+    parser.add_argument('--keypoint-semantics', default='intersection_only', choices=['degree_ne_2', 'intersection_only'])
     parser.add_argument('--seed', type=int, default=10)
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--resume', help='Trusted geometry training checkpoint')
@@ -124,6 +126,9 @@ def main(argv=None):
     seed_everything(args.seed)
     train = GeometryDataset(args.manifest, 'train', args.patch_size, args.road_width, args.keypoint_radius, args.keypoint_semantics)
     val = GeometryDataset(args.manifest, 'val', args.patch_size, args.road_width, args.keypoint_radius, args.keypoint_semantics)
+    report = validate_dataset(args.manifest, Config(patch_size=args.patch_size, guidance=False), splits=('train', 'val'), guided=False)
+    if not report['valid']:
+        raise ValueError(f'Geometry data validation failed: {json.dumps(report)}')
     model = SAMRoadGeometry(args.patch_size, args.variant).to(args.device)
     if not args.resume:
         initialize_encoder(model, args.sam_checkpoint)
@@ -139,6 +144,9 @@ def main(argv=None):
                   'sam_checkpoint_sha256': sha256(args.sam_checkpoint),
                   'manifest_sha256': sha256(args.manifest), 'training_data_sha256': train.patches.fingerprint(),
                   'validation_data_sha256': val.patches.fingerprint(), 'keypoint_semantics': args.keypoint_semantics}
+    provenance.update({'sam_variant': args.variant, 'patch_size': args.patch_size, 'use_sam_decoder': False,
+                       'recipe': 'geometry_only_bce', 'dataset_kind': train.patches.document.get('dataset_kind', 'unverified')})
+    provenance['implementation_sha256'] = source_fingerprint()
     settings = {k: v for k, v in vars(args).items() if k not in ('manifest', 'sam_checkpoint', 'output', 'resume')}
     output.mkdir(parents=True, exist_ok=True)
     best, start = float('inf'), 0
@@ -157,7 +165,11 @@ def main(argv=None):
             torch.cuda.set_rng_state_all(previous['rng_cuda'])
         generator.set_state(previous['loader_rng'])
         best, start = previous['best_val'], previous['epoch'] + 1
+    if args.epochs < start:
+        raise ValueError('Epoch budget cannot be smaller than completed training')
+    record_run(output, settings, provenance, args.device, allow_epoch_extension=True)
     for epoch in range(start, args.epochs):
+        started = time.perf_counter()
         training_loss = geometry_epoch(model, loader, args.device, optimizer)
         validation_loss = geometry_epoch(model, validation, args.device)
         improved = validation_loss < best
@@ -170,11 +182,12 @@ def main(argv=None):
                  'rng_torch': torch.get_rng_state(),
                  'rng_cuda': torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
                  'loader_rng': generator.get_state()}
-        torch.save(state, output / 'last.ckpt')
+        atomic_torch_save(state, output / 'last.ckpt')
         if improved:
-            torch.save(state, output / 'best.ckpt')
+            atomic_torch_save(state, output / 'best.ckpt')
         with (output / 'history.jsonl').open('a') as stream:
-            stream.write(json.dumps({'epoch': epoch, 'train_loss': training_loss, 'val_loss': validation_loss}) + '\n')
+            stream.write(json.dumps({'epoch': epoch, 'train_loss': training_loss, 'val_loss': validation_loss,
+                                    'elapsed_seconds': time.perf_counter() - started}) + '\n')
         print(f'epoch={epoch} train={training_loss:.6f} val={validation_loss:.6f}', flush=True)
 
 

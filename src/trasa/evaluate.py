@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 from .graph import Graph, canonical_edges
-from .metrics import evaluate
+from .metrics import evaluate, evaluation_protocol
 
 
 def load_graph(path):
@@ -14,7 +14,9 @@ def load_graph(path):
     metadata = doc.get('metadata', {})
     if metadata.get('coordinate_space', 'pixel') != 'pixel':
         raise ValueError('Paper evaluation expects pixel graphs, not geospatial coordinates')
-    nodes = np.asarray(doc['nodes'], float).reshape(-1, 2)
+    nodes = np.asarray(doc['nodes'], float)
+    if nodes.ndim == 1 and nodes.size == 0:
+        nodes = nodes.reshape(0, 2)
     if not np.isfinite(nodes).all():
         raise ValueError('Non-finite graph coordinates')
     edges = canonical_edges(doc['edges'], len(nodes)).numpy()
@@ -38,9 +40,7 @@ def main(argv=None):
     result = evaluate(load_graph(args.reference), load_graph(args.prediction),
                       args.tolerance, args.minimum_branch, spacing=args.apls_spacing,
                       max_controls=args.apls_max_controls, seed=args.seed)
-    result['protocol'] = {'coordinate_units': 'pixels', 'tolerance': args.tolerance,
-                          'minimum_branch': args.minimum_branch, 'apls_spacing': args.apls_spacing,
-                          'apls_max_controls': args.apls_max_controls, 'seed': args.seed}
+    result['protocol'] = evaluation_protocol(args.tolerance, args.minimum_branch, args.apls_spacing, args.apls_max_controls, args.seed)
     path = Path(args.output)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')

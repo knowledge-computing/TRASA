@@ -10,6 +10,7 @@ import torch
 from .config import Config
 from .geometry import SAMRoadGeometry
 from .model import TRASA
+from .provenance import atomic_torch_save
 
 
 def sha256(path):
@@ -33,37 +34,47 @@ def seed_everything(seed):
 
 
 def save_checkpoint(path, model, optimizer, epoch, generator, provenance, best_val=float('inf')):
-    state = {'schema_version': 1, 'config': model.config.asdict(),
+    numpy_state = np.random.get_state()
+    state = {'schema_version': 2, 'config': model.config.asdict(),
              'model': model.state_dict(), 'optimizer': optimizer.state_dict(), 'epoch': epoch,
-             'rng_python': random.getstate(), 'rng_numpy': np.random.get_state(),
+             'rng_python': random.getstate(), 'rng_numpy': (numpy_state[0], numpy_state[1].tolist(), *numpy_state[2:]),
              'rng_torch': torch.get_rng_state(), 'rng_cuda': torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
              'loader_rng': generator.get_state(), 'provenance': provenance, 'best_val': best_val,
              'geometry_spec': None}
     if isinstance(model.geometry, SAMRoadGeometry):
         state['geometry_spec'] = {'patch_size': model.geometry.patch_size, 'variant': model.geometry.variant,
                                   'use_sam_decoder': model.geometry.use_sam_decoder}
-    torch.save(state, path)
+    atomic_torch_save(state, path)
 
 
 def load_model(path, device='cpu'):
     # Native training checkpoints contain NumPy RNG state: only load trusted files.
     state = torch.load(path, map_location='cpu', weights_only=False)
-    if state.get('schema_version') != 1:
+    if state.get('schema_version') not in (1, 2):
         raise ValueError('Unsupported TRASA checkpoint format')
-    config = Config(**state['config'])
+    recorded = dict(state['config'])
+    # Earlier schemas omitted this setting and used direct relation cross-attention.
+    recorded.setdefault('rln_attention', False)
+    if state['schema_version'] == 1:
+        recorded.setdefault('position_encoding', 'legacy_corner')
+        recorded.setdefault('pair_training', 'legacy_average_logits')
+        recorded.setdefault('require_bound_guidance', False)
+    config = Config(**recorded)
     geometry = SAMRoadGeometry(**state['geometry_spec']) if state.get('geometry_spec') else None
     model = TRASA(replace(config, pretrained_backbone=False), geometry)
     model.load_state_dict(state['model'], strict=True)
     model.config = config
     if geometry is not None:
         geometry._checkpoint_loaded = True
+        geometry.provenance = state['provenance'].get('guidance_provenance')
     return model.to(device), state
 
 
 def restore_training_state(state, optimizer, generator):
     optimizer.load_state_dict(state['optimizer'])
     random.setstate(state['rng_python'])
-    np.random.set_state(state['rng_numpy'])
+    saved = state['rng_numpy']
+    np.random.set_state((saved[0], np.asarray(saved[1], dtype=np.uint32), *saved[2:]))
     torch.set_rng_state(state['rng_torch'])
     if state['rng_cuda'] and torch.cuda.is_available():
         torch.cuda.set_rng_state_all(state['rng_cuda'])

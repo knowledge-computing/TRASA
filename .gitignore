@@ -12,4 +12,5 @@ dist/
 *.pt
 *.ckpt
 *.npz
-docs/paper/
+# Local research notes and manuscript inputs; not part of the published code.
+/docs/

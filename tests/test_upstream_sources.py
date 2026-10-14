@@ -5,7 +5,7 @@ from pathlib import Path
 
 def test_pinned_upstream_snapshots_are_complete_and_unmodified():
     root = Path(__file__).resolve().parents[1]
-    files = json.loads((root / 'docs/upstream-files.json').read_text())
+    files = json.loads((root / 'third_party/upstream-files.json').read_text())
     assert len(files) >= 200
     for record in files:
         assert hashlib.sha256((root / record['path']).read_bytes()).hexdigest() == record['sha256']

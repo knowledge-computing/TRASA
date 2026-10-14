@@ -47,10 +47,14 @@ def test_geometry_rejects_random_or_vanilla_sam(monkeypatch, tmp_path):
         geometry.load_checkpoint(checkpoint)
 
 
-def test_real_sam_encoder_and_geometry_decoder_forward():
+@pytest.mark.parametrize('patch_size', [32, 256])
+def test_real_sam_encoder_and_geometry_decoder_forward(patch_size):
     # Synthetic initialization verifies architecture/imports, not pretrained accuracy.
-    geometry = SAMRoadGeometry(patch_size=32)
-    geometry._checkpoint_loaded = True
-    masks = geometry(torch.rand(1, 3, 32, 32))
-    assert masks.shape == (1, 2, 32, 32)
-    assert torch.isfinite(masks).all()
+    geometry = SAMRoadGeometry(patch_size=patch_size)
+    geometry.map_decoder.requires_grad_(True)
+    logits = geometry.mask_logits(torch.rand(1, 3, patch_size, patch_size))
+    assert logits.shape == (1, 2, patch_size, patch_size)
+    assert torch.isfinite(logits).all() and len(geometry.image_encoder.blocks) == 12
+    logits.square().mean().backward()
+    assert any(p.grad is not None for p in geometry.map_decoder.parameters())
+    assert all(p.grad is None for p in geometry.image_encoder.parameters())

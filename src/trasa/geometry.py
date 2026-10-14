@@ -78,13 +78,16 @@ class SAMRoadGeometry(nn.Module):
         self._checkpoint_loaded = True
         self.checkpoint_path = str(Path(path).resolve())
         self.provenance = checkpoint.get('provenance')
+        self.requires_grad_(False).eval()
         return self
 
     def validate_provenance(self, declared):
+        if set(declared.get('training_map_ids', [])) & set(declared.get('validation_map_ids', [])):
+            raise ValueError('Geometry provenance: training and validation maps must be disjoint')
         if self.provenance:
-            for key in ('training_map_ids', 'keypoint_semantics'):
+            for key in ('training_map_ids', 'validation_map_ids', 'keypoint_semantics'):
                 actual, supplied = self.provenance.get(key), declared.get(key)
-                if key == 'training_map_ids':
+                if key.endswith('_map_ids'):
                     actual, supplied = sorted(actual or []), sorted(supplied or [])
                 if actual != supplied:
                     raise ValueError(f'Geometry checkpoint provenance disagrees with {key}')

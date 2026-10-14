@@ -1,4 +1,5 @@
 import json
+import hashlib
 import random
 from dataclasses import replace
 
@@ -19,14 +20,18 @@ from trasa.train import run_epoch
 def manifest(tmp_path):
     Image.fromarray(np.zeros((256, 256, 3), np.uint8)).save(tmp_path / 'image.png')
     (tmp_path / 'graph.json').write_text(json.dumps({'nodes': [[0, 10], [255, 20]], 'edges': [[0, 1]], 'types': [1, 1]}))
-    np.savez(tmp_path / 'masks.npz', road=np.ones((256, 256), np.float32) * .25,
-             intersection=np.ones((256, 256), np.float32) * .75)
-    doc = {'schema_version': 1, 'guidance_provenance': {'checkpoint_sha256': 'a' * 64,
+    Image.fromarray(np.zeros((256, 256, 3), np.uint8)).save(tmp_path / 'image_b.png')
+    for filename, image, sample_id, map_id in [('masks.npz', 'image.png', 'a', 'A'), ('masks_b.npz', 'image_b.png', 'b', 'B')]:
+        np.savez(tmp_path / filename, road=np.ones((256, 256), np.float32) * .25,
+                 intersection=np.ones((256, 256), np.float32) * .75, checkpoint_sha256='a' * 64,
+                 keypoint_semantics='degree_ne_2', sample_id=sample_id, map_id=map_id,
+                 image_sha256=hashlib.sha256((tmp_path / image).read_bytes()).hexdigest())
+    doc = {'schema_version': 1, 'dataset_kind': 'synthetic', 'guidance_provenance': {'checkpoint_sha256': 'a' * 64,
            'channel_order': ['road', 'intersection'], 'keypoint_semantics': 'degree_ne_2', 'training_map_ids': ['A']},
            'samples': [{'id': 'a', 'map_id': 'A', 'split': 'train', 'image': 'image.png',
-                        'graph': 'graph.json', 'guidance': 'masks.npz'},
-                       {'id': 'b', 'map_id': 'B', 'split': 'val', 'image': 'image.png',
-                        'graph': 'graph.json', 'guidance': 'masks.npz'}]}
+                        'graph': 'graph.json', 'guidance': 'masks.npz', 'origin': [0, 0]},
+                       {'id': 'b', 'map_id': 'B', 'split': 'val', 'image': 'image_b.png',
+                        'graph': 'graph.json', 'guidance': 'masks_b.npz', 'origin': [0, 0]}]}
     path = tmp_path / 'manifest.json'
     path.write_text(json.dumps(doc))
     return path, doc

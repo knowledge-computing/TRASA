@@ -29,3 +29,9 @@ epochs: 100
 learning_rate: 0.0001
 weight_decay: 0.0001
 seed: 10
+position_encoding: ldtr_centered
+pair_training: random_order
+type_reduction: mean  # Explicit engineering reduction; confirm against original experiment.
+rln_attention: true  # Pinned LDTR relation-token behavior.
+validity_loss_weight: 1.0  # Internal node term is unspecified in TRASA.
+coordinate_loss_weight: 1.0

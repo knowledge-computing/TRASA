@@ -14,6 +14,16 @@ from shapely.ops import unary_union
 from .graph import Graph
 
 
+def evaluation_protocol(tolerance=5, minimum_branch=8, spacing=5, max_controls=500, seed=10):
+    if not np.isfinite([tolerance, minimum_branch, spacing]).all() or tolerance < 0 or minimum_branch < 0 or spacing <= 0 or max_controls < 2:
+        raise ValueError('Invalid spatial evaluation settings')
+    return {'version': 2, 'coordinate_units': 'pixels', 'spatial_tolerance_pixels': tolerance,
+            'minimum_branch_pixels': minimum_branch, 'apls_spacing_pixels': spacing,
+            'apls_max_controls': max_controls, 'seed': seed,
+            'apls_algorithm': 'control_point_apls_v1', 'matching': 'max_cardinality_min_distance',
+            'spurious_branch_definition': 'maximal_path_with_unsupported_connected_length_gt_minimum'}
+
+
 def degrees(graph):
     return np.bincount(graph.edges.flatten(), minlength=len(graph.nodes))
 
@@ -47,8 +57,10 @@ def line_geometry(graph):
 
 def geometry_metrics(reference, predicted, tolerance=5):
     ref, pred = line_geometry(reference), line_geometry(predicted)
-    completeness = ref.intersection(pred.buffer(tolerance)).length / ref.length if ref.length else float(not pred.length)
-    correctness = pred.intersection(ref.buffer(tolerance)).length / pred.length if pred.length else float(not ref.length)
+    ref_buffer = ref.buffer(tolerance) if tolerance else ref
+    pred_buffer = pred.buffer(tolerance) if tolerance else pred
+    completeness = ref.intersection(pred_buffer).length / ref.length if ref.length else float(not pred.length)
+    correctness = pred.intersection(ref_buffer).length / pred.length if pred.length else float(not ref.length)
     denominator = completeness + correctness - completeness * correctness
     return {'completeness': completeness, 'correctness': correctness,
             'quality': completeness * correctness / denominator if denominator else 0.0}
@@ -97,9 +109,14 @@ def topology_metrics(reference, predicted, tolerance=5, minimum_branch=8):
                 current, edge_id = available[0]
                 visited.add(edge_id)
             branches.append(LineString(points))
-    buffer = line_geometry(reference).buffer(tolerance)
-    # Strict manuscript reading: entire unmatched branch has no buffered support.
-    spurious = sum(branch.length > minimum_branch and branch.intersection(buffer).length == 0 for branch in branches)
+    reference_geometry = line_geometry(reference)
+    buffer = reference_geometry.buffer(tolerance) if tolerance else reference_geometry
+    # The short supported attachment at a junction must not hide a false branch.
+    spurious = 0
+    for branch in branches:
+        unsupported = branch.difference(buffer)
+        parts = list(unsupported.geoms) if hasattr(unsupported, 'geoms') else [unsupported]
+        spurious += int(any(part.length > minimum_branch for part in parts))
     return {'intersection_precision': precision, 'intersection_recall': recall,
             'intersection_f1': 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
             'intersection_degree_accuracy': ida,
@@ -158,7 +175,7 @@ def _insert_controls(graph, controls, tolerance):
                  np.empty(0), np.empty(0), np.empty(0)), mapping
 
 
-def apls(reference, predicted, tolerance=5, spacing=5, max_controls=500, seed=10):
+def apls_control_points(reference, predicted, tolerance=5, spacing=5, max_controls=500, seed=10):
     """Symmetric APLS; missing paths receive unit penalty. Units are pixels.
 
     This is a disclosed control-point protocol, not a claim that unpublished
@@ -195,16 +212,34 @@ def apls(reference, predicted, tolerance=5, spacing=5, max_controls=500, seed=10
 
 def type_macro_f1(truth, prediction):
     """Evaluate raw queries, including unmatched no-node, before graph filtering."""
+    return type_metrics(truth, prediction)['type_macro_f1']
+
+
+def type_metrics(truth, prediction):
     truth, prediction = np.asarray(truth), np.asarray(prediction)
-    values = []
-    for label in range(4):
-        tp = np.sum((truth == label) & (prediction == label))
-        denominator = np.sum(truth == label) + np.sum(prediction == label)
-        values.append(2 * tp / denominator if denominator else 0.0)
-    return float(np.mean(values))
+    if truth.shape != prediction.shape or truth.ndim != 1 or (truth != truth.astype(int)).any() or (prediction != prediction.astype(int)).any():
+        raise ValueError('Type labels must be aligned integer vectors')
+    if ((truth < 0) | (truth > 3)).any() or ((prediction < 0) | (prediction > 3)).any():
+        raise ValueError('Type labels must be 0,1,2,3')
+    result, values = {}, []
+    for label, name in enumerate(('no_node', 'endpoint', 'intermediate', 'intersection')):
+        tp = int(np.sum((truth == label) & (prediction == label)))
+        support, predicted = int(np.sum(truth == label)), int(np.sum(prediction == label))
+        precision, recall = tp / predicted if predicted else 0., tp / support if support else 0.
+        f1 = 2 * tp / (support + predicted) if support + predicted else 0.
+        result.update({f'type_precision_{name}': precision, f'type_recall_{name}': recall,
+                       f'type_f1_{name}': f1, f'type_support_{name}': support})
+        values.append(f1)
+    result['type_macro_f1'] = float(np.mean(values))
+    return result
+
+
+# Backward-compatible name; reports identify the actual algorithm explicitly.
+apls = apls_control_points
 
 
 def evaluate(reference, predicted, tolerance=5, minimum_branch=8, **apls_settings):
+    evaluation_protocol(tolerance, minimum_branch, **apls_settings)
     return {**geometry_metrics(reference, predicted, tolerance),
             **topology_metrics(reference, predicted, tolerance, minimum_branch),
             'apls': apls(reference, predicted, tolerance=tolerance, **apls_settings)}

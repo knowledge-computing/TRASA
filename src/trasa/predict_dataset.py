@@ -9,10 +9,11 @@ import torch
 from torch.utils.data import DataLoader
 
 from .data import PatchDataset, collate_patches
-from .graph import Graph, merge_patch_graphs, node_types
+from .graph import Graph, clip_graph, merge_patch_graphs, node_types, ownership_boxes
 from .losses import GraphCriterion
-from .metrics import evaluate, type_macro_f1
+from .metrics import evaluate, evaluation_protocol, type_metrics
 from .runtime import load_model, sha256
+from .provenance import environment, partitions, source_fingerprint
 
 
 @torch.no_grad()
@@ -51,11 +52,18 @@ def predict_dataset(model, dataset, batch_size=8):
     results = {}
     cfg = model.config
     for map_id, group in grouped.items():
-        predicted = merge_patch_graphs(group['prediction'], group['origins'], cfg.patch_size, cfg.merge_tolerance, cfg.boundary_band)
-        reference = merge_patch_graphs(group['reference'], group['origins'], cfg.patch_size, cfg.merge_tolerance, cfg.boundary_band)
+        spatial = dataset.document.get('maps', {}).get(map_id, {})
+        shape = (spatial['height'], spatial['width']) if 'height' in spatial and 'width' in spatial else None
+        boxes = ownership_boxes(group['origins'], cfg.patch_size, shape)
+        predicted = merge_patch_graphs([clip_graph(g, b) for g, b in zip(group['prediction'], boxes)], group['origins'],
+                                      cfg.patch_size, cfg.merge_tolerance, cfg.boundary_band, boxes)
+        reference = merge_patch_graphs([clip_graph(g, b) for g, b in zip(group['reference'], boxes)], group['origins'],
+                                      cfg.patch_size, cfg.merge_tolerance, cfg.boundary_band, boxes)
+        predicted.metadata.update(spatial)
+        reference.metadata.update(spatial)
         metrics = evaluate(reference, predicted, tolerance=5, minimum_branch=8, seed=cfg.seed)
         if cfg.ntc:
-            metrics['type_macro_f1'] = type_macro_f1(group['type_truth'], group['type_prediction'])
+            metrics.update(type_metrics(group['type_truth'], group['type_prediction']))
         results[map_id] = {'prediction': predicted, 'reference': reference, 'metrics': metrics}
     return results
 
@@ -77,16 +85,27 @@ def main(argv=None):
     if model.config.guidance and dataset.guidance_provenance != expected:
         raise ValueError('Evaluation geometry provenance differs from training')
     results = predict_dataset(model, dataset, model.config.batch_size)
+    identity = {'schema_version': 2, 'model_sha256': sha256(args.checkpoint),
+                'manifest_sha256': sha256(args.manifest), 'evaluated_data_sha256': dataset.fingerprint(),
+                'geometry_provenance': expected, 'config': model.config.asdict(), 'seed': model.config.seed,
+                'map_partitions': partitions(dataset.document),
+                'dataset_kind': dataset.document.get('dataset_kind', 'unverified'),
+                'variant': state['provenance'].get('variant', 'unverified'), 'checkpoint_epoch': state['epoch'],
+                'training_implementation_sha256': state['provenance'].get('implementation_sha256'),
+                'evaluation_implementation_sha256': source_fingerprint(), 'environment': environment(args.device)}
+    status = Path(args.checkpoint).parent / 'run_status.json'
+    identity['training_status'] = json.loads(status.read_text()) if status.exists() else None
     output.mkdir(parents=True)
     reports = []
     for number, (map_id, result) in enumerate(sorted(results.items())):
-        result['prediction'].metadata.update({'map_id': map_id, 'model_sha256': sha256(args.checkpoint), 'coordinate_space': 'pixel'})
+        result['prediction'].metadata.update({'map_id': map_id, 'model_sha256': identity['model_sha256'], 'coordinate_space': 'pixel'})
         (output / f'map_{number:02d}_prediction.json').write_text(json.dumps(result['prediction'].asdict(), indent=2) + '\n')
         (output / f'map_{number:02d}_reference.json').write_text(json.dumps(result['reference'].asdict(), indent=2) + '\n')
-        reports.append({'map_id': map_id, 'split': args.split, 'metrics': result['metrics']})
-    (output / 'metrics.json').write_text(json.dumps({'maps': reports, 'protocol': {
-        'spatial_tolerance_pixels': 5, 'minimum_branch_pixels': 8, 'apls_spacing_pixels': 5,
-        'apls_max_controls': 500, 'seed': model.config.seed}}, indent=2, allow_nan=False) + '\n')
+        reports.append({'map_id': map_id, 'split': args.split, 'metrics': result['metrics'],
+                        'prediction_artifact': f'map_{number:02d}_prediction.json',
+                        'reference_artifact': f'map_{number:02d}_reference.json'})
+    (output / 'metrics.json').write_text(json.dumps({'schema_version': 2, 'maps': reports,
+        'experiment': identity, 'protocol': evaluation_protocol(seed=model.config.seed)}, indent=2, allow_nan=False) + '\n')
 
 
 if __name__ == '__main__':

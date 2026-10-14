@@ -4,29 +4,55 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from dataclasses import replace
 
 import numpy as np
+
+from .config import Config
+from .data import guidance_metadata, manifest_errors
 
 
 VARIANTS = ('ldtr', 'ldtr-sam', 'ldtr-ntc', 'trasa')
 
 
 def aggregate_reports(paths):
-    maps, protocol = [], None
+    maps, protocol, identity = [], None, None
     for path in paths:
         report = json.loads(Path(path).read_text())
         if protocol is not None and report['protocol'] != protocol:
             raise ValueError('Cannot average results with different evaluation protocols')
         protocol = report['protocol']
-        maps.extend(report['maps'])
+        if report.get('experiment'):
+            current = {key: report['experiment'].get(key) for key in ('variant', 'dataset_kind', 'seed', 'config', 'evaluation_implementation_sha256')}
+            geometry = report['experiment'].get('geometry_provenance') or {}
+            current['geometry_recipe'] = {key: geometry.get(key) for key in ('sam_variant', 'patch_size', 'use_sam_decoder', 'keypoint_semantics', 'recipe')}
+            if identity is not None and identity != current:
+                raise ValueError('Cannot average incompatible variants, datasets, seeds, configurations or code')
+            identity = current
+            if any(row.get('split') != 'test' for row in report['maps']):
+                raise ValueError('Only held-out test maps may enter result aggregation')
+            declared_test = report['experiment'].get('map_partitions', {}).get('test')
+            if declared_test is not None and {row['map_id'] for row in report['maps']} != set(declared_test):
+                raise ValueError('Reported map IDs disagree with declared held-out test partition')
+            from .runtime import sha256
+            maps.extend({**row, 'experiment': report['experiment'], 'report_sha256': sha256(path)} for row in report['maps'])
+        else:
+            maps.extend(report['maps'])
     if not maps:
         raise ValueError('No map evaluation results')
     if len({m['map_id'] for m in maps}) != len(maps):
         raise ValueError('A held-out map must appear exactly once in fold results')
     keys = sorted({k for row in maps for k in row['metrics']})
-    means = {key: float(np.mean([row['metrics'][key] for row in maps if row['metrics'].get(key) is not None]))
-             if any(row['metrics'].get(key) is not None for row in maps) else None for key in keys}
-    return {'map_count': len(maps), 'mean': means, 'maps': maps, 'protocol': protocol}
+    means, deviations, counts = {}, {}, {}
+    for key in keys:
+        values = [row['metrics'][key] for row in maps if row['metrics'].get(key) is not None]
+        if any(not isinstance(v, (int, float)) or not np.isfinite(v) for v in values):
+            raise ValueError(f'Nonfinite or nonscalar metric: {key}')
+        counts[key] = len(values)
+        means[key] = float(np.mean(values)) if values else None
+        deviations[key] = float(np.std(values, ddof=0)) if values else None
+    return {'map_count': len(maps), 'mean': means, 'std_population': deviations, 'eligible_maps': counts,
+            'maps': maps, 'protocol': protocol, 'identity': identity}
 
 
 def main(argv=None):
@@ -42,6 +68,13 @@ def main(argv=None):
     held_out, benchmark_maps = [], None
     for manifest in manifests:
         doc = json.loads(manifest.read_text())
+        errors = manifest_errors(doc, manifest.parent)
+        if errors:
+            raise ValueError('\n'.join(errors))
+        if not args.dry_run and any(v in ('trasa', 'ldtr-sam') for v in args.variants):
+            provenance = guidance_metadata(doc, replace(Config.load(args.config), guidance=True))
+            if provenance.get('cache_schema_version') != 2 or 'validation_map_ids' not in provenance:
+                raise ValueError('Benchmark requires bound caches and checkpoint-selection provenance')
         train = {r['map_id'] for r in doc['samples'] if r['split'] == 'train'}
         val = {r['map_id'] for r in doc['samples'] if r['split'] == 'val'}
         test = {r['map_id'] for r in doc['samples'] if r['split'] == 'test'}

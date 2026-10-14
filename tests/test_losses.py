@@ -5,7 +5,7 @@ from trasa.losses import GraphCriterion
 
 
 class PredictedPairs:
-    def pair_logits(self, outputs, batch, pairs, connectivity=False):
+    def pair_logits(self, outputs, batch, pairs, connectivity=False, symmetrize=True):
         # Query 2 is the central intersection; all star nodes are within 2 hops.
         positive = torch.ones(len(pairs), dtype=torch.bool) if connectivity else (pairs == 2).any(1)
         return torch.stack((~positive, positive), -1).float() * 30

@@ -16,9 +16,10 @@ jobs:
           cache-dependency-path: |
             requirements-cpu.lock
             requirements-data.lock
+            requirements-research.lock
             pyproject.toml
       - run: python -m pip install --upgrade pip
-      - run: python -m pip install -r requirements-data.lock
+      - run: python -m pip install -r requirements-research.lock
       - run: python -m pytest -q
         env:
           OMP_NUM_THREADS: '2'
