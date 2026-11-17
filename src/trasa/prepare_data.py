@@ -12,6 +12,7 @@ from PIL import Image
 
 from .graph import canonical_edges, node_types
 from .data import manifest_errors, read_road_mask
+from .road_types import code as road_type_code
 
 
 def _integer_array(text):
@@ -87,12 +88,13 @@ def read_vtp(path):
 
 def convert_graph(path, coordinates, patch_size=256, drop_isolated=False):
     path = Path(path)
-    extras, width_map = {}, None
+    extras, width_map, type_map = {}, None, None
     if path.suffix.lower() == '.vtp':
         nodes, edges = read_vtp(path)
     elif path.suffix.lower() == '.json':
         document = json.loads(path.read_text())
-        extras = {key: value for key, value in document.items() if key not in ('nodes', 'edges', 'types', 'edge_widths')}
+        extras = {key: value for key, value in document.items()
+                  if key not in ('nodes', 'edges', 'types', 'edge_widths', 'edge_types')}
         nodes = np.array(document['nodes'], dtype=float)
         if nodes.ndim == 1 and nodes.size == 0:
             nodes = nodes.reshape(0, 2)
@@ -110,6 +112,18 @@ def convert_graph(path, coordinates, patch_size=256, drop_isolated=False):
                 if key in width_map and width_map[key] != width:
                     raise ValueError('Duplicate edges have conflicting road widths')
                 width_map[key] = int(width)
+        if 'edge_types' in document:
+            raw = np.asarray(edges).reshape(-1, 2)
+            names = document['edge_types']
+            if not isinstance(names, list) or len(names) != len(raw):
+                raise ValueError('One road type required per edge')
+            type_map = {}
+            for edge, value in zip(raw, names):
+                road_type_code(value)  # rejects unknown names
+                key = tuple(sorted(int(v) for v in edge))
+                if key in type_map and type_map[key] != value:
+                    raise ValueError('Duplicate edges have conflicting road types')
+                type_map[key] = value
     else:
         raise ValueError('Use JSON node/edge graphs or VTP; export other serialized formats first')
     if nodes.ndim != 2 or nodes.shape[1] != 2:
@@ -133,6 +147,8 @@ def convert_graph(path, coordinates, patch_size=256, drop_isolated=False):
     roles = node_types(len(nodes), edges)
     if width_map is not None:
         extras['edge_widths'] = [width_map[tuple(edge)] for edge in indices]
+    if type_map is not None:
+        extras['edge_types'] = [type_map[tuple(edge)] for edge in indices]
     return {**extras, 'nodes': nodes.tolist(), 'edges': edges.tolist(), 'types': roles.tolist()}
 
 

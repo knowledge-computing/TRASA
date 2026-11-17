@@ -9,6 +9,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 from .graph import canonical_edges, node_types
+from .road_types import code as road_type_code
 
 
 def manifest_errors(document, root=None):
@@ -156,6 +157,11 @@ def load_sample(row, root, config, use_cached_guidance, provenance=None):
         if widths.shape != (len(edges),) or not torch.isfinite(widths).all() or (widths < 1).any() or (widths != widths.long()).any():
             raise ValueError('One positive integer road width required per canonical edge')
         target['edge_widths'] = widths.long()
+    if 'edge_types' in annotation:
+        names = annotation['edge_types']
+        if not isinstance(names, list) or len(names) != len(edges):
+            raise ValueError('One road type required per canonical edge')
+        target['edge_classes'] = torch.tensor([road_type_code(value) for value in names], dtype=torch.long)
     return {'rgb': torch.from_numpy(rgb).permute(2, 0, 1), 'guidance': guidance,
             'target': target, 'id': row['id'], 'map_id': row['map_id']}
 

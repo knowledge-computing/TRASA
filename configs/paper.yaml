@@ -35,3 +35,6 @@ type_reduction: mean  # Explicit engineering reduction; confirm against original
 rln_attention: true  # Pinned LDTR relation-token behavior.
 validity_loss_weight: 1.0  # Internal node term is unspecified in TRASA.
 coordinate_loss_weight: 1.0
+lr_drop_epoch: 0  # Paper describes no schedule; constant learning rate.
+lr_drop_factor: 0.1
+grad_clip_norm: 0.0  # Paper describes no gradient clipping.

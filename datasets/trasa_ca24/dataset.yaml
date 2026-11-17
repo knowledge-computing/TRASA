@@ -1,0 +1,86 @@
+# TRASA benchmark: eight USGS 1:24,000 California sheets (paper Sec. 3).
+#
+# USGS rasters are NOT stored in this repository. Each sheet is listed by its
+# public USGS URL and SHA256; `python -m trasa.fetch_sources` downloads it into
+# a cache outside the repo and refuses files whose bytes differ. The corrected
+# road annotations (the only hand-made data) live in annotations/ and are also
+# pinned by SHA256.
+#
+# Fill in every TODO (see README.md), then run once:
+#   python -m trasa.fetch_sources --spec datasets/trasa_ca24/dataset.yaml --lock
+#   python -m trasa.build_dataset --spec datasets/trasa_ca24/dataset.yaml --output data/trasa_ca24 --preview
+#   cp data/trasa_ca24/checksums.json datasets/trasa_ca24/expected_checksums.json
+# and commit sources.lock.json + expected_checksums.json.
+schema_version: 1
+name: trasa_ca24
+dataset_kind: benchmark
+description: >-
+  Eight USGS historical (HTMC, scanned) and US Topo (digital) 1:24,000 sheets from
+  California, 1934-2021, with road graphs initialized from 2021 TIGER/Line and
+  manually corrected to the printed road symbols.
+
+reference_provenance:
+  source: 2021 TIGER/Line
+  historical_correction: manually_corrected
+  review_protocol: overlay inspection against mapped-year road evidence
+
+# Patch grid (paper: 256x256 patches, map-level folds).
+patch_size: 256
+stride: 256
+downsample: 1            # integer block-average factor; 1 = native USGS resolution
+min_frame_coverage: 0.8  # keep patches with >= 80% of their area inside the neatline
+outside_frame: keep      # keep collar pixels in edge patches, or `white`
+keep_empty_patches: true
+
+# Patch graphs (<= 100 nodes = node queries).
+node_spacing: 20.0       # TODO-CHECK: max pixels between consecutive nodes used in the paper
+simplify_tolerance: 1.0  # Douglas-Peucker tolerance in pixels before spacing nodes
+max_nodes: 100
+snap_tolerance: 0.5      # road ends / shared vertices closer than this are one node (pixels)
+coordinate_decimals: 3
+
+# Annotation attribute that holds the road type, and how source values map to
+# the five paper types (highway, secondary_highway, light_duty_road,
+# light_duty_road_paved, trail). Values already equal to a paper type need no entry.
+road_type_field: road_type
+road_type_map: {}
+drop_types: []
+
+# Line widths in pixels for road masks (paper: 2-10 px by symbol).
+road_widths:             # TODO-CHECK: the widths used for the paper labels
+  highway: 10
+  secondary_highway: 8
+  light_duty_road: 5
+  light_duty_road_paved: 6
+  trail: 2
+
+allow_ballpark_transforms: false
+
+maps:
+  # One entry per annotated sheet. `python -m trasa.usgs_lookup` writes these from the
+  # USGS metadata CSV (URL, title, year, quadrangle bounds). Shape of a filled entry
+  # (illustrative values only; take the real ones from usgs_lookup):
+  #
+  # - map_id: CA_BeverlyHills_100133_1995
+  #   title: Beverly Hills
+  #   series: htmc
+  #   year: 1995
+  #   scan_id: 100133
+  #   raster:
+  #     url: https://prd-tnm.s3.amazonaws.com/StagedProducts/Maps/HistoricalTopo/GeoTIFF/CA/CA_Beverly%20Hills_100133_1995_24000_geo.tif
+  #     # sha256 comes from sources.lock.json after `fetch_sources --lock`
+  #   neatline: {west: -118.5, south: 34.0, east: -118.375, north: 34.125, crs: EPSG:4267}
+  #   annotation:
+  #     path: annotations/CA_BeverlyHills_100133_1995.geojson
+  - {map_id: TODO_map_1, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_2, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_3, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_4, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_5, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_6, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_7, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+  - {map_id: TODO_map_8, raster: {url: TODO}, annotation: {path: annotations/TODO.geojson}}
+
+# The eight folds used in the paper: six training maps, one validation map, one test map.
+folds:
+  - {train: [TODO], val: TODO, test: TODO}

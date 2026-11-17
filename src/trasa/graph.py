@@ -65,6 +65,7 @@ class Graph:
     node_scores: np.ndarray
     edge_scores: np.ndarray
     metadata: dict = field(default_factory=dict)
+    edge_classes: np.ndarray = None  # road-type codes per edge (trasa.road_types); empty = untyped
 
     def __post_init__(self):
         self.nodes = np.asarray(self.nodes, dtype=float)
@@ -77,36 +78,59 @@ class Graph:
             raw = raw.reshape(0, 2)
         checked = canonical_edges(raw, len(self.nodes)).numpy()
         self.types, self.node_scores, self.edge_scores = map(np.asarray, (self.types, self.node_scores, self.edge_scores))
+        classes = np.asarray([] if self.edge_classes is None else self.edge_classes)
+        if classes.size and (not np.isfinite(classes.astype(float)).all() or (classes != np.floor(classes)).any()
+                             or (classes < -1).any()):
+            raise ValueError('Invalid graph edge_classes')
+        classes = classes.astype(int)
         for name, array, count in (('types', self.types, len(self.nodes)), ('node_scores', self.node_scores, len(self.nodes)),
-                                   ('edge_scores', self.edge_scores, len(raw))):
+                                   ('edge_scores', self.edge_scores, len(raw)), ('edge_classes', classes, len(raw))):
             if array.ndim != 1 or len(array) not in (0, count) or not np.isfinite(array).all():
                 raise ValueError(f'Invalid graph {name}')
+        raw_scores = self.edge_scores
         if len(raw) and len(self.edge_scores):
             grouped = {}
             for edge, score in zip(np.sort(raw.astype(int), axis=1), self.edge_scores):
                 key = tuple(edge)
                 grouped[key] = max(grouped.get(key, float('-inf')), float(score))
             self.edge_scores = np.array([grouped[tuple(e)] for e in checked])
+        if len(raw) and len(classes):
+            # Duplicate edges keep the class of their highest-scoring copy; known classes beat unknown.
+            scores = raw_scores if len(raw_scores) else np.ones(len(raw))
+            chosen, best = {}, {}
+            for edge, value, score in zip(np.sort(raw.astype(int), axis=1), classes, scores):
+                key = tuple(edge)
+                if (key not in chosen or score > best[key]
+                        or (score == best[key] and chosen[key] == -1 and value != -1)):
+                    chosen[key], best[key] = int(value), float(score)
+            classes = np.array([chosen[tuple(e)] for e in checked], dtype=int)
+        self.edge_classes = classes.reshape(-1) if len(raw) else np.empty(0, dtype=int)
         self.edges = checked
 
     def asdict(self):
-        return {key: value.tolist() if isinstance(value, np.ndarray) else value
-                for key, value in vars(self).items()}
+        result = {key: value.tolist() if isinstance(value, np.ndarray) else value
+                  for key, value in vars(self).items()}
+        if len(self.edge_classes):
+            from .road_types import name
+            result['edge_types'] = [name(value) for value in self.edge_classes]
+        return result
 
 
 @torch.no_grad()
-def decode_graphs(model, outputs, image_size=None):
+def decode_graphs(model, outputs, image_size=None, node_threshold=None, edge_threshold=None):
     """Only validity and direct edges construct graphs; NTC is an attribute."""
     config = model.config
+    node_threshold = config.node_threshold if node_threshold is None else node_threshold
+    edge_threshold = config.edge_threshold if edge_threshold is None else edge_threshold
     height, width = image_size or (config.patch_size, config.patch_size)
     graphs = []
     for batch, logits in enumerate(outputs['pred_logits']):
         confidence = logits.softmax(-1)[:, 1]
-        keep = torch.where(confidence >= config.node_threshold)[0]
+        keep = torch.where(confidence >= node_threshold)[0]
         local_pairs = torch.triu_indices(len(keep), len(keep), offset=1, device=keep.device).T
         pairs = keep[local_pairs]
         scores = model.pair_logits(outputs, batch, pairs).softmax(-1)[:, 1]
-        retain_edges = scores >= config.edge_threshold
+        retain_edges = scores >= edge_threshold
         coords = outputs['pred_nodes'][batch, keep] * logits.new_tensor([width - 1, height - 1])
         types = (outputs['pred_types'][batch, keep].argmax(-1) if 'pred_types' in outputs
                  else torch.full_like(keep, -1))
@@ -142,13 +166,15 @@ def clip_graph(graph, bounds):
     if (hi < lo).any():
         return Graph(np.empty((0, 2)), np.empty((0, 2), int), np.empty(0, int), np.empty(0), np.empty(0))
     nodes, types, scores, edges, edge_scores, mapping = [], [], [], [], [], {}
+    classes, typed = [], len(graph.edge_classes) > 0
     for i, point in enumerate(graph.nodes):
         if (point >= lo).all() and (point <= hi).all():
             mapping[i] = len(nodes)
             nodes.append(point)
             types.append(graph.types[i])
             scores.append(graph.node_scores[i])
-    for (a, b), score in zip(graph.edges, graph.edge_scores):
+    edge_classes = graph.edge_classes if typed else np.full(len(graph.edges), -1)
+    for (a, b), score, edge_class in zip(graph.edges, graph.edge_scores, edge_classes):
         start, vector = graph.nodes[a], graph.nodes[b] - graph.nodes[a]
         lower, upper = 0., 1.
         for axis in range(2):
@@ -172,9 +198,11 @@ def clip_graph(graph, bounds):
                 scores.append(min(graph.node_scores[a], graph.node_scores[b]))
         edges.append(endpoints)
         edge_scores.append(score)
+        classes.append(int(edge_class))
     return Graph(np.asarray(nodes).reshape(-1, 2), np.asarray(edges, int).reshape(-1, 2),
                  np.asarray(types, int), np.asarray(scores), np.asarray(edge_scores),
-                 {**graph.metadata, 'clip_bounds': list(map(float, bounds))})
+                 {**graph.metadata, 'clip_bounds': list(map(float, bounds))},
+                 np.asarray(classes if typed else [], int))
 
 
 def merge_patch_graphs(graphs, origins, patch_size=256, tolerance=5.0, boundary_band=5.0, boundary_boxes=None):
@@ -190,7 +218,8 @@ def merge_patch_graphs(graphs, origins, patch_size=256, tolerance=5.0, boundary_
     boundary_boxes = boundary_boxes if boundary_boxes is not None else [[0, 0, patch_size - 1, patch_size - 1] for _ in graphs]
     if len(boundary_boxes) != len(graphs):
         raise ValueError('One boundary rectangle required per patch')
-    nodes, types, scores, members, edges = [], [], [], [], {}
+    nodes, types, scores, members, edges, classes = [], [], [], [], {}, {}
+    typed = any(len(graph.edge_classes) for graph in graphs)
     bins, cell = defaultdict(list), max(tolerance, 1.)
     for patch_id, (graph, origin) in enumerate(zip(graphs, origins)):
         mapping = []
@@ -222,14 +251,20 @@ def merge_patch_graphs(graphs, origins, patch_size=256, tolerance=5.0, boundary_
                 if boundary:
                     bins[key].append(target)
             mapping.append(target)
-        for (a, b), score in zip(graph.edges, graph.edge_scores):
+        edge_classes = graph.edge_classes if len(graph.edge_classes) else np.full(len(graph.edges), -1)
+        for (a, b), score, edge_class in zip(graph.edges, graph.edge_scores, edge_classes):
             a, b = mapping[a], mapping[b]
             if a != b:
-                edge = tuple(sorted((a, b)))
-                edges[edge] = max(edges.get(edge, 0), float(score))
+                edge, score, value = tuple(sorted((a, b))), float(score), int(edge_class)
+                if edge not in edges:
+                    classes[edge] = value
+                elif score > edges[edge] or (score == edges[edge] and classes[edge] == -1 and value != -1):
+                    classes[edge] = value  # keep the class of the most confident copy
+                edges[edge] = max(edges.get(edge, 0), score)
     return Graph(np.asarray(nodes, dtype=float).reshape(-1, 2),
                  np.asarray(list(edges), dtype=int).reshape(-1, 2), np.asarray(types, dtype=int),
-                 np.asarray(scores, dtype=float), np.asarray(list(edges.values()), dtype=float))
+                 np.asarray(scores, dtype=float), np.asarray(list(edges.values()), dtype=float),
+                 edge_classes=np.asarray([classes[e] for e in edges] if typed else [], dtype=int))
 
 
 def georeference_graph(graph, affine, crs):
@@ -243,4 +278,5 @@ def georeference_graph(graph, affine, crs):
     nodes = np.column_stack((x0 + a * xy[:, 0] + b * xy[:, 1],
                              y0 + d * xy[:, 0] + e * xy[:, 1]))
     return Graph(nodes, graph.edges.copy(), graph.types.copy(), graph.node_scores.copy(),
-                 graph.edge_scores.copy(), {**graph.metadata, 'crs': crs, 'affine': list(affine), 'coordinate_space': 'geospatial'})
+                 graph.edge_scores.copy(), {**graph.metadata, 'crs': crs, 'affine': list(affine), 'coordinate_space': 'geospatial'},
+                 graph.edge_classes.copy())

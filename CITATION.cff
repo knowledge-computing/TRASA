@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this code or the TRASA benchmark, please cite the paper below."
+title: "TRASA: Topology-Preserving Road Network Extraction from Historical Topographic Maps"
+repository-code: "https://github.com/knowledge-computing/TRASA"
+authors:
+  - family-names: Kirsanova
+    given-names: Sofia
+    affiliation: University of Minnesota Twin Cities
+  - family-names: Li
+    given-names: Zekun
+    affiliation: University of Minnesota Twin Cities
+  - family-names: Leyk
+    given-names: Stefan
+    affiliation: University of Colorado Boulder
+  - family-names: Knoblock
+    given-names: Craig A.
+    affiliation: USC Information Sciences Institute
+  - family-names: Chiang
+    given-names: Yao-Yi
+    affiliation: University of Minnesota Twin Cities
+preferred-citation:
+  type: conference-paper
+  title: "TRASA: Topology-Preserving Road Network Extraction from Historical Topographic Maps"
+  authors:
+    - family-names: Kirsanova
+      given-names: Sofia
+    - family-names: Li
+      given-names: Zekun
+    - family-names: Leyk
+      given-names: Stefan
+    - family-names: Knoblock
+      given-names: Craig A.
+    - family-names: Chiang
+      given-names: Yao-Yi
+  collection-title: "Proceedings of the 34th ACM International Conference on Advances in Geographic Information Systems (SIGSPATIAL '26)"
+  conference:
+    name: "SIGSPATIAL '26"
+    city: Riverside
+    region: CA
+    country: US
+  publisher:
+    name: ACM
+  year: 2026
+  doi: "10.1145/3841645.3843303"

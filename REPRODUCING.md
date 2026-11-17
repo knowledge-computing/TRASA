@@ -1,6 +1,28 @@
 # Reproducing TRASA
 
-This guide covers the eight-map experiment, all four graph variants, complete-map inference, and tables calculated from saved artifacts. Start with the [installation instructions](README.md#installation). The corrected benchmark, original fold schedule, trained study weights, and original evaluator must be supplied separately. The commands support reproduction; execution tests do not establish agreement with published scores.
+This guide covers the eight-map experiment, all four graph variants, complete-map inference, the baselines, and tables calculated from saved artifacts. Start with the [installation instructions](README.md#installation). The commands support reproduction; execution tests do not establish agreement with published scores.
+
+## Building the benchmark from USGS sheets
+
+The benchmark is defined by [datasets/trasa_ca24/dataset.yaml](datasets/trasa_ca24/dataset.yaml) and built with:
+
+```bash
+python -m trasa.reproduce_dataset --spec datasets/trasa_ca24/dataset.yaml --output data/benchmark
+```
+
+What the build does, for every sheet:
+
+1. **Sources.** The USGS GeoTIFF (or zip) is downloaded from its URL into the cache and must match its SHA256 (spec or `sources.lock.json`). The corrected annotation is checked the same way. A changed file stops the build.
+2. **Frame.** The quadrangle neatline (west/south/east/north in the printed datum, densified and projected into the raster) or explicit pixel corners define the map frame. A datum shift that PROJ can only do as a "ballpark" transformation is refused, because it moves NAD27 sheets by about 100 m.
+3. **Patches.** A fixed grid starts at the frame's top-left pixel; 256×256 patches with at least `min_frame_coverage` of their area inside the frame are kept, including patches without roads. Optional integer `downsample` uses block averaging (no GDAL resampling), so pixels do not depend on the GDAL version.
+4. **Road graph.** Annotation lines are projected into the raster and clipped to the frame. Road ends closer than `snap_tolerance` become one node; a road end touching another road between its vertices splits that road (T-junction); vertices shared by different roads become intersections. Lines that cross without a shared vertex stay unconnected (bridges, overpasses).
+5. **Patch graphs.** The map graph is clipped to each patch (cuts at the patch border become endpoints, i.e. "patch exit" nodes), simplified with Douglas-Peucker (`simplify_tolerance`) and given intermediate nodes at most `node_spacing` pixels apart. If a patch would exceed 100 nodes, the spacing grows by 25% steps for that patch only (recorded in the graph metadata). Coordinates are rounded to 0.001 px. Each edge keeps its road type and line width.
+6. **Masks.** Road masks are drawn from the patch graph with the road-type widths, so they are a function of the published JSON.
+7. **Outputs.** `images/`, `graphs/`, `masks/`, `references/<map>.json` (complete-map graph), `index.json` (input of `prepare_data`, with map size, CRS and GDAL affine of the patch grid), `fold_schedule.json`, `checksums.json` and `build_report.json` (counts and library versions).
+
+`trasa.verify_dataset --dataset data/benchmark/built --expected datasets/trasa_ca24/expected_checksums.json` lists every differing file by group. Graph and mask files depend only on the spec, the annotation bytes, shapely and PROJ; image files also depend on the GDAL build that decodes the GeoTIFF (pinned through `rasterio==1.4.3` in the lock files).
+
+To add or change sheets: `trasa.usgs_lookup` writes spec entries from the USGS metadata CSV, `trasa.tiger_init` makes a TIGER/Line 2021 first draft of the roads for correction, `trasa.fetch_sources --lock` records new hashes, and `build_dataset --preview` draws the frame and roads over each sheet for a visual check. See [datasets/trasa_ca24/README.md](datasets/trasa_ca24/README.md).
 
 ## Dataset format
 
@@ -41,9 +63,12 @@ A graph JSON uses `[x,y]` node coordinates and zero-based undirected edges:
   "nodes": [[0,128], [128,128], [255,128]],
   "edges": [[0,1], [1,2]],
   "edge_widths": [3,7],
+  "edge_types": ["light_duty_road", "highway"],
   "metadata": {"correction_status": "manually_reviewed"}
 }
 ```
+
+`edge_types` is optional; when present it uses the five paper road types (`highway`, `secondary_highway`, `light_duty_road`, `light_duty_road_paved`, `trail`) and enables per-road-type completeness in evaluation.
 
 Graph metadata and optional label widths are preserved. Duplicate/reversed edges are canonicalized; conflicting duplicate widths are rejected. Self-loops, isolated reference points, nonfinite or out-of-range coordinates, fractional/invalid indices, zero-length edges, and graphs exceeding 100 nodes fail validation. Disconnected road components are allowed. No-node class 0 belongs to unmatched queries; reference roles follow degree: endpoint 1, intermediate 2, and intersection 3 for degree ≥3.
 
@@ -113,6 +138,8 @@ python -m trasa.train --config configs/paper.yaml --manifest data/guidance/fold_
 python -m trasa.predict_dataset --manifest data/guidance/fold_00/manifest.json --checkpoint runs/trasa/fold_00/best.pt --output results/trasa/fold_00 --device cuda
 ```
 
+Thresholds: `trasa.select_thresholds` runs the checkpoint once on the validation map, decodes a grid of node/edge thresholds (default 0.3-0.7), scores each map graph by the mean of APLS, intersection F1 and connectivity, and writes the best pair together with the checkpoint hash; `predict_dataset --thresholds` applies it to the test map and records it. Without `--thresholds` the checkpoint's 0.5/0.5 is used, as in the paper.
+
 `best.pt` selects the lowest validation objective; `last.pt` preserves optimizer, RNG, loader-generator, epoch, and best-objective state. History contains per-epoch losses and validation metrics. Resume an interruption with the same options and `--resume runs/trasa/fold_00/last.pt`. Changed configuration, data, geometry, variant, or implementation fingerprints invalidate resume. `--max-epochs-this-run` permits a short run while retaining the intended total budget. A completed budget adds no epoch.
 
 After generating all eight guidance manifests, inspect and execute all 32 graph runs:
@@ -168,8 +195,9 @@ Let `R` and `P` be unions of reference and predicted road segments, `L` geometri
 | Connectivity | Fraction of reference-connected, spatially matched node pairs connected in the prediction |
 | Split errors | Reference components whose matched nodes occupy multiple predicted components |
 | Spurious branches | Maximal degree-two-interior paths with an unsupported connected portion longer than eight pixels |
+| Completeness per road type | `L(R_t ∩ B5(P)) / L(R_t)` for the reference roads `R_t` of type `t` (predictions carry no road type) |
 
-Geometric unions avoid double-counting coincident segments; buffers use Shapely's rounded caps/joins. At zero tolerance, original lines are intersected directly. Both empty road graphs score 1 for geometric metrics; exactly one empty graph scores 0. One-to-one Hungarian matching maximizes matches within tolerance before minimizing Euclidean distance. Topological intersections use graph degree, independent of NTC. Both empty intersection sets score 1; exactly one empty set scores 0. Degree accuracy and connectivity are null without eligible pairs. Connectivity excludes unmatched nodes; reports include its eligible-pair count. Split errors count affected components once and omit wholly unmatched components. Closed loops are eligible branch paths.
+Node matching is solved exactly per group of nodes that lie within five pixels of each other, which gives the same result as one dense assignment but needs memory proportional to the number of nearby pairs, not to the square of the map's node count. Geometric unions avoid double-counting coincident segments; buffers use Shapely's rounded caps/joins. At zero tolerance, original lines are intersected directly. Both empty road graphs score 1 for geometric metrics; exactly one empty graph scores 0. One-to-one Hungarian matching maximizes matches within tolerance before minimizing Euclidean distance. Topological intersections use graph degree, independent of NTC. Both empty intersection sets score 1; exactly one empty set scores 0. Degree accuracy and connectivity are null without eligible pairs. Connectivity excludes unmatched nodes; reports include its eligible-pair count. Split errors count affected components once and omit wholly unmatched components. Closed loops are eligible branch paths.
 
 **APLS — `control_point_apls_v1`** is the explicitly named pixel-space approximation:
 
@@ -185,20 +213,24 @@ Directions without eligible pairs yield 0 unless both graphs have no edges, whic
 
 ## External baselines
 
-Full LDTR and SAM-Road sources are [included at pinned revisions](third_party/README.md). Native baseline environments are separate from TRASA; the controlled `--ablation ldtr` uses the manuscript's ResNet-50 architecture rather than the upstream default lineament configuration. The geometry branch alone is not the full SAM-Road graph baseline.
+LDTR is the `--ablation ldtr` variant: the same ResNet-50 backbone, transformer and training settings as TRASA, without guidance and NTC. The other baselines:
 
-| Method | Implementation reference | Required external artifacts / setup |
+| Method | Run | Read back and score |
 |---|---|---|
-| LDTR | [Included source](third_party/ldtr/README.md) | Historical-road weights and original baseline settings |
-| SAM-Road | [Included source](third_party/sam_road/README.md) | Native topology training recipe, historical-data adaptation, and baseline weights |
-| RelationFormer | [RGB source revision](https://github.com/suprosanna/relationformer/tree/5035d2a524e6402d410f970d9b60cc973cd3e16f) | Separate native environment/CUDA operator, historical-data adaptation, and weights |
-| Sat2Graph | [Source revision](https://github.com/songtaohe/Sat2Graph/tree/7ca4a345a2ceae4c62c120661608a60e9e962be4) | Legacy TensorFlow environment, historical preprocessing/weights; upstream usage terms apply |
-| SAM3 | [Source revision](https://github.com/facebookresearch/sam3/tree/0570b3a5be9c4e694f23d85232fb55f4a6f1f7fc) | Separate environment following that revision, gated weights, and actual road-type prompts |
-| GPT5.5 | Service identified by the manuscript | Original model snapshot, exact prompt/training example, and actual responses |
+| GPT-5.5 | `python -m trasa.run_gpt --manifest data/benchmark/folds/fold_00.json --example <train or val patch id> --output external/gpt55/fold_00` | `python -m trasa.baseline_evaluate --manifest data/benchmark/folds/fold_00.json --predictions external/gpt55/fold_00/index.json --method gpt5.5 --output results/gpt55/fold_00` |
+| SAM3 | `python -m trasa.run_sam3 --manifest data/benchmark/folds/fold_00.json --output external/sam3/fold_00 --device cuda` | same, with `external/sam3/fold_00/index.json` |
+| SAM-Road | `python -m trasa.export_baselines cityscale --manifest <fold> --output external/samroad/fold_00`, then train and infer with [the included SAM-Road code](third_party/sam_road/README.md) on that folder (`DATASET: cityscale`) | `python -m trasa.export_baselines import-cityscale --regions external/samroad/fold_00/trasa_regions.json --predictions <save dir>/graph --method sam-road --output external/samroad/fold_00/maps`, then `baseline_evaluate` with its `index.json` |
+| Sat2Graph | Same `cityscale` export ([source revision](https://github.com/songtaohe/Sat2Graph/tree/7ca4a345a2ceae4c62c120661608a60e9e962be4), legacy TensorFlow environment) | `import-cityscale` with the file pattern of its output pickles |
+| RelationFormer | `python -m trasa.export_baselines vtp --manifest <fold> --output external/relationformer/fold_00` (`train/`, `val/`, `test/` with `raw/`, `seg/`, `vtp/`), then train with the [RGB source revision](https://github.com/suprosanna/relationformer/tree/5035d2a524e6402d410f970d9b60cc973cd3e16f) | `python -m trasa.export_baselines import-vtp --samples external/relationformer/fold_00/trasa_samples.json --predictions <prediction vtp dir> --manifest <fold> --method relationformer --output external/relationformer/fold_00/graphs`, then `baseline_evaluate` |
 
-These external reference revisions are not verified as the study's revisions. Native baseline training and proprietary-service inference have not been reproduced. Follow each implementation's README for its native commands; no missing weights, integrations, or service responses are simulated.
+Notes:
 
-Executable adapters convert supplied predictions into the shared pixel-graph format:
+- **GPT-5.5** follows paper Table 3: one call per patch and road type, the fixed one-shot example (its polylines come from the example patch's corrected graph), model `gpt-5.5`, temperature 0, top-p 1, 4096 output tokens, structured JSON. The example must come from a training or validation map. Every request hash and raw answer is stored under `responses/`, so re-scoring needs no API calls. Answers are clipped to the patch, malformed answers are counted and dropped, and polylines are drawn with the road-type widths of the dataset spec before graph conversion. If the API rejects sampling parameters for the model, `--no-sampling-parameters` omits them and records that.
+- **SAM3** gets the text prompt `"[road type] roads"` for each of the five types; instance masks are merged keeping the highest instance score per pixel, then thresholded at 0.5. Probability maps are cached for re-scoring.
+- **cityscale export**: maps are cut into 2048 px regions; training and validation maps get indices that the upstream partition treats as train/validation, the test map gets test indices, so the upstream code runs unchanged. The export stops if an index would pass the upstream range of 180.
+- These source revisions are references; the revisions and weights used in the study are not verified. Native baseline training is not run by the test suite.
+
+The generic adapters remain available for any other output:
 
 ```bash
 python -m trasa.baselines --kind graph-json --input external/prediction.json --output external/converted.json --method relationformer --source-revision 5035d2a524e6402d410f970d9b60cc973cd3e16f
@@ -208,9 +240,9 @@ python -m trasa.baselines --kind mask --input external/road_probability.tif --ou
 python -m trasa.baselines --kind polylines-json --input external/response.json --output external/converted_gpt.json --method gpt5.5
 ```
 
-Mask conversion thresholds at 0.5, removes 8-connected components smaller than 20 pixels, applies Zhang skeletonization, removes endpoint spurs shorter than eight pixels, and clusters connected junction pixels. Polylines are clamped to patch bounds and rasterized at a recorded width (default 3). Invalid individual polylines are counted/discarded; malformed whole responses fail. VTP/pickle edges are already decoded; retained confidence 1 describes geometry rather than a neural score. Declare `xy`/`yx` for native pickle data and load trusted files only.
+Mask conversion thresholds at 0.5, removes 8-connected components smaller than 20 pixels, applies Zhang skeletonization, removes endpoint spurs shorter than eight pixels, and clusters connected junction pixels. Polylines are clamped to patch bounds and rasterized at a recorded width (default 3, or road-type widths for the `responses` format written by `run_gpt`). Invalid individual polylines are counted/discarded; malformed whole responses fail. VTP/pickle edges are already decoded; retained confidence 1 describes geometry rather than a neural score. Declare `xy`/`yx` for native pickle data and load trusted files only.
 
-Create an external prediction index with actual provenance and either all held-out patch samples or complete maps:
+An external prediction index (written for you by `run_gpt`, `run_sam3` and `import-cityscale`) records actual provenance and either all held-out patch samples or complete maps:
 
 ```json
 {
@@ -231,6 +263,18 @@ python -m trasa.baseline_evaluate --manifest data/folds/fold_00.json --predictio
 python -m trasa.tables --reports runs/benchmark/*/fold_*/test/metrics.json results/relationformer/fold_*/metrics.json --output results/comparison_tables
 ```
 
+## Figures
+
+```bash
+python -m trasa.figures --manifest data/benchmark/folds/fold_03.json \
+  --row "Broken continuation" <map_id> 512 768 --row "Spurious branch" <map_id> 1024 256 \
+  --reference results/trasa/fold_03/map_00_reference.json \
+  --method GPT-5.5 results/gpt55/fold_03/map_00_prediction.json --method TRASA results/trasa/fold_03/map_00_prediction.json \
+  --output figures/qualitative.png
+```
+
+Rows are patch origins in map pixels; graphs are drawn in #536FBF over a lightened patch.
+
 ## Implementation conventions
 
 The manuscript specifies the main architecture and outer objective `L_node + L_edge + L_conn + 0.5 L_type`. Details below make the executable implementation explicit where original experiment settings are unavailable:
@@ -249,6 +293,9 @@ The manuscript specifies the main architecture and outer objective `L_node + L_e
 | NTC reduction | Unweighted mean CE, configurable as `type_reduction: sum`. The manuscript's summed expression does not specify batch normalization. |
 | Pair order | Random endpoint order in training; average both orders' logits for direct-edge inference. NTC and auxiliary connectivity do not replace validity/direct-edge decoding. |
 | Run selection | Seed 10, fully trainable graph backbone, lowest validation objective. Verify original-run seed, freezing, and selection settings. |
+| Schedule and clipping | Constant learning rate and no clipping, as the paper describes none. `lr_drop_epoch`/`lr_drop_factor`/`grad_clip_norm` reproduce upstream LDTR (drop at 80, clip 0.1) if the study used them. |
+| Thresholds | 0.5/0.5 by default; `select_thresholds` implements the validation-map selection the paper describes. |
+| Dataset settings | `node_spacing` 20 px, Douglas-Peucker 1 px, snap 0.5 px, road widths 10/8/5/6/2 px and 80% frame coverage are defaults in `datasets/trasa_ca24/dataset.yaml`; confirm them against the study labels before publishing checksums. |
 | Evaluation | The explicit pixel protocol above, including approximate APLS and raw-query macro-F1; compare with the original evaluator. |
 
 Checkpoints record mathematical settings, input/data provenance, and execution metadata. Older checkpoints retain their stored legacy position, pair-order, and relation-token defaults; loading them does not make their original training equivalent to the current configuration. GPU memory/runtime and CUDA parity have not been measured.

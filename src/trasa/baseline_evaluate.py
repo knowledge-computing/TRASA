@@ -4,12 +4,10 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-import numpy as np
-
 from .config import Config
 from .data import PatchDataset
 from .export import read_graph, write_graph
-from .graph import Graph, clip_graph, merge_patch_graphs, ownership_boxes
+from .predict_dataset import merge_map, reference_graph
 from .metrics import evaluate, evaluation_protocol
 from .provenance import environment, partitions, source_fingerprint
 from .runtime import sha256
@@ -22,13 +20,15 @@ def main(argv=None):
     parser.add_argument('--output', required=True)
     parser.add_argument('--method', required=True)
     parser.add_argument('--seed', type=int, default=10)
+    parser.add_argument('--patch-size', type=int, default=256)
     args = parser.parse_args(argv)
     output = Path(args.output)
     if output.exists():
         raise ValueError('Baseline evaluation output exists')
     source = Path(args.predictions).resolve()
     supplied = json.loads(source.read_text())
-    dataset = PatchDataset(args.manifest, 'test', Config(guidance=False, ntc=False))
+    config = Config(patch_size=args.patch_size, guidance=False, ntc=False)
+    dataset = PatchDataset(args.manifest, 'test', config)
     partition = partitions(dataset.document)
     for key in ('training_map_ids', 'validation_map_ids', 'example_map_ids'):
         if key not in supplied:
@@ -51,10 +51,8 @@ def main(argv=None):
     prediction_hashes = {}
     for index, row in enumerate(dataset.samples):
         target = dataset[index]['target']
-        count = len(target['nodes'])
         group = groups[row['map_id']]
-        group['reference'].append(Graph(target['nodes'].numpy() * 255, target['edges'].numpy(),
-                                         target['types'].numpy(), np.ones(count), np.ones(len(target['edges']))))
+        group['reference'].append(reference_graph(target, config.patch_size))
         group['origins'].append(row['origin'])
         if patch_predictions:
             prediction = source.parent / patch_predictions[row['id']]
@@ -67,13 +65,9 @@ def main(argv=None):
     reports = []
     for index, (map_id, group) in enumerate(sorted(groups.items())):
         spatial = dataset.document.get('maps', {}).get(map_id, {})
-        shape = (spatial['height'], spatial['width']) if 'height' in spatial and 'width' in spatial else None
-        boxes = ownership_boxes(group['origins'], 256, shape)
-        reference = merge_patch_graphs([clip_graph(g, b) for g, b in zip(group['reference'], boxes)],
-                                       group['origins'], boundary_boxes=boxes)
+        reference = merge_map(group['reference'], group['origins'], config, spatial)
         if patch_predictions:
-            predicted = merge_patch_graphs([clip_graph(g, b) for g, b in zip(group['prediction'], boxes)],
-                                           group['origins'], boundary_boxes=boxes)
+            predicted = merge_map(group['prediction'], group['origins'], config, spatial)
         else:
             prediction = source.parent / map_predictions[map_id]
             predicted = read_graph(prediction)

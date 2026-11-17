@@ -45,11 +45,15 @@ class Config:
     rln_attention: bool = True
     validity_loss_weight: float = 1.0
     coordinate_loss_weight: float = 1.0
+    # Not described in the paper; off by default. Upstream LDTR uses a drop at 80 and clip 0.1.
+    lr_drop_epoch: int = 0  # 0 = constant learning rate
+    lr_drop_factor: float = 0.1
+    grad_clip_norm: float = 0.0  # 0 = no gradient clipping
 
     def __post_init__(self):
         integer_fields = ('patch_size', 'num_queries', 'hidden_dim', 'encoder_layers', 'decoder_layers',
                           'attention_heads', 'feature_levels', 'feedforward_dim', 'sampling_points',
-                          'hops', 'batch_size', 'epochs', 'seed')
+                          'hops', 'batch_size', 'epochs', 'seed', 'lr_drop_epoch')
         if any(isinstance(getattr(self, name), bool) or not isinstance(getattr(self, name), int)
                for name in integer_fields):
             raise ValueError('Architecture counts, epoch budget and seed must be integers')
@@ -83,6 +87,8 @@ class Config:
         if min(self.node_weight, self.edge_weight, self.connectivity_weight, self.type_weight,
                self.validity_loss_weight, self.coordinate_loss_weight) < 0:
             raise ValueError('Loss weights must be nonnegative')
+        if self.lr_drop_epoch < 0 or not 0 < self.lr_drop_factor <= 1 or self.grad_clip_norm < 0:
+            raise ValueError('lr_drop_epoch >= 0, lr_drop_factor in (0,1] and grad_clip_norm >= 0 required')
         if len(self.node_class_weights) != 2 or len(self.edge_class_weights) != 2 or any(
                 not math.isfinite(w) or w <= 0 for w in (*self.node_class_weights, *self.edge_class_weights)):
             raise ValueError('Two positive class weights required')

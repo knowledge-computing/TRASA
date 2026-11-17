@@ -6,6 +6,17 @@ from pathlib import Path
 import numpy as np
 
 from .graph import Graph, georeference_graph
+from .road_types import name as road_type_name
+
+
+def edge_classes_from_document(value):
+    """Road-type codes from either ``edge_classes`` (codes) or ``edge_types`` (names)."""
+    from .road_types import code
+    if value.get('edge_classes') is not None and len(value['edge_classes']):
+        return np.asarray(value['edge_classes'], dtype=int)
+    if value.get('edge_types') is not None and len(value['edge_types']):
+        return np.asarray([code(item) for item in value['edge_types']], dtype=int)
+    return np.empty(0, dtype=int)
 
 
 def read_graph(path):
@@ -13,7 +24,7 @@ def read_graph(path):
     count, edge_count = len(value['nodes']), len(value['edges'])
     return Graph(value['nodes'], value['edges'], np.asarray(value.get('types', [-1] * count)),
                  np.asarray(value.get('node_scores', [1.] * count)), np.asarray(value.get('edge_scores', [1.] * edge_count)),
-                 value.get('metadata', {}))
+                 value.get('metadata', {}), edge_classes_from_document(value))
 
 
 def write_graph(graph, path):
@@ -49,8 +60,11 @@ def write_graph(graph, path):
             features.append({'type': 'Feature', 'geometry': {'type': 'Point', 'coordinates': point.tolist()},
                              'properties': {'node_id': index, 'node_type': int(graph.types[index]), 'score': float(graph.node_scores[index])}})
         for index, (a, b) in enumerate(graph.edges):
+            properties = {'edge_id': index, 'source': int(a), 'target': int(b), 'score': float(graph.edge_scores[index])}
+            if len(graph.edge_classes):
+                properties['road_type'] = road_type_name(graph.edge_classes[index])
             features.append({'type': 'Feature', 'geometry': {'type': 'LineString', 'coordinates': nodes[[a, b]].tolist()},
-                             'properties': {'edge_id': index, 'source': int(a), 'target': int(b), 'score': float(graph.edge_scores[index])}})
+                             'properties': properties})
         collection = {'type': 'FeatureCollection', 'features': features,
                       'properties': {'source_graph_metadata': graph.metadata, 'output_crs': 'EPSG:4326'}}
         path.write_text(json.dumps(collection, indent=2, allow_nan=False) + '\n')
@@ -61,10 +75,13 @@ def write_graph(graph, path):
         except ImportError as error:
             raise RuntimeError("GeoPackage export requires pip install -e '.[gis]'") from error
         with fiona.open(path, 'w', driver='GPKG', layer='roads', crs=CRS.from_user_input(crs),
-                        schema={'geometry': 'LineString', 'properties': {'source': 'int', 'target': 'int', 'score': 'float'}}) as layer:
+                        schema={'geometry': 'LineString', 'properties': {'source': 'int', 'target': 'int', 'score': 'float',
+                                                                          'road_type': 'str'}}) as layer:
             for index, (a, b) in enumerate(graph.edges):
+                road_type = road_type_name(graph.edge_classes[index]) if len(graph.edge_classes) else None
                 layer.write({'geometry': {'type': 'LineString', 'coordinates': graph.nodes[[a, b]].tolist()},
-                             'properties': {'source': int(a), 'target': int(b), 'score': float(graph.edge_scores[index])}})
+                             'properties': {'source': int(a), 'target': int(b), 'score': float(graph.edge_scores[index]),
+                                            'road_type': road_type}})
         with fiona.open(path, 'w', driver='GPKG', layer='nodes', crs=CRS.from_user_input(crs),
                         schema={'geometry': 'Point', 'properties': {'node_id': 'int', 'node_type': 'int', 'score': 'float'}}) as layer:
             for index, point in enumerate(graph.nodes):

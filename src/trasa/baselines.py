@@ -96,6 +96,29 @@ def polylines_to_mask(document, patch_size=256, road_width=3):
     return np.asarray(image, float) / 255, discarded
 
 
+def typed_polylines_to_mask(document, widths, patch_size=256):
+    """Rasterize per-road-type answers with the road-type line widths (paper Sec. 5.1).
+
+    ``document`` is ``{"responses": [{"road_type": t, "polylines": [...]}, ...]}``;
+    responses with ``status`` other than ``ok`` count as malformed and add nothing.
+    """
+    from .road_types import ROAD_TYPES
+    responses = document.get('responses')
+    if not isinstance(responses, list):
+        raise ValueError('Expected a responses list with road_type and polylines')
+    mask, discarded, malformed = np.zeros((patch_size, patch_size)), 0, 0
+    for response in responses:
+        road_type = response.get('road_type')
+        if road_type not in ROAD_TYPES:
+            raise ValueError(f'Unknown road type in response: {road_type!r}')
+        if response.get('status', 'ok') != 'ok' or not isinstance(response.get('polylines'), list):
+            malformed += 1
+            continue
+        part, dropped = polylines_to_mask({'polylines': response['polylines']}, patch_size, int(widths[road_type]))
+        mask, discarded = np.maximum(mask, part), discarded + dropped
+    return mask, discarded, malformed
+
+
 def adjacency_to_graph(adjacency, axis_order):
     if axis_order not in ('xy', 'yx'):
         raise ValueError('Declare xy or yx coordinates explicitly')
@@ -119,6 +142,7 @@ def main(argv=None):
     parser.add_argument('--axis-order', choices=['xy', 'yx'])
     parser.add_argument('--trusted-pickle', action='store_true')
     parser.add_argument('--road-width', type=int, default=3)
+    parser.add_argument('--road-widths', help='JSON {road_type: width}; used for typed polylines (responses format)')
     parser.add_argument('--threshold', type=float, default=.5)
     parser.add_argument('--min-component', type=int, default=20)
     parser.add_argument('--min-spur', type=float, default=8)
@@ -144,7 +168,13 @@ def main(argv=None):
             if mask.max(initial=0) > 1:
                 mask /= 255
         else:
-            mask, discarded = polylines_to_mask(json.loads(Path(args.input).read_text()), args.patch_size, args.road_width)
+            document = json.loads(Path(args.input).read_text())
+            if 'responses' in document:
+                from .road_types import DEFAULT_WIDTHS, check_widths
+                widths = check_widths({**DEFAULT_WIDTHS, **json.loads(args.road_widths)}) if args.road_widths else DEFAULT_WIDTHS
+                mask, discarded, _ = typed_polylines_to_mask(document, widths, args.patch_size)
+            else:
+                mask, discarded = polylines_to_mask(document, args.patch_size, args.road_width)
         graph = mask_to_graph(mask, args.threshold, args.min_component, args.min_spur)
     elif args.kind == 'vtp':
         if args.coordinates is None:

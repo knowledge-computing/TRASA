@@ -28,16 +28,46 @@ def degrees(graph):
     return np.bincount(graph.edges.flatten(), minlength=len(graph.nodes))
 
 
-def match_nodes(reference, predicted, tolerance=5):
-    """Maximum-cardinality one-to-one nearest assignment within tolerance."""
-    if not len(reference) or not len(predicted):
-        return np.empty((0, 2), dtype=int)
+def _dense_match(reference, predicted, tolerance):
     distances = cdist(reference, predicted)
     # Dominating cost first maximizes valid matches, then minimizes distance.
     invalid = (max(len(reference), len(predicted)) + 1) * (tolerance + 1)
     rows, cols = linear_sum_assignment(np.where(distances <= tolerance, distances, invalid))
     valid = distances[rows, cols] <= tolerance
     return np.column_stack((rows[valid], cols[valid]))
+
+
+def match_nodes(reference, predicted, tolerance=5):
+    """Maximum-cardinality one-to-one nearest assignment within tolerance.
+
+    Only pairs closer than the tolerance can match, so the assignment splits
+    into independent groups of nearby nodes. Each group is solved exactly with
+    the same cost as one dense problem, which keeps memory linear in map size.
+    """
+    reference, predicted = np.asarray(reference, float).reshape(-1, 2), np.asarray(predicted, float).reshape(-1, 2)
+    if not len(reference) or not len(predicted):
+        return np.empty((0, 2), dtype=int)
+    if len(reference) * len(predicted) <= 250_000:
+        return _dense_match(reference, predicted, tolerance)
+    from scipy.spatial import cKDTree
+    pairs = cKDTree(reference).sparse_distance_matrix(cKDTree(predicted), tolerance, output_type='ndarray')
+    if not len(pairs):
+        return np.empty((0, 2), dtype=int)
+    rows, cols = pairs['i'].astype(int), pairs['j'].astype(int)
+    n = len(reference)
+    adjacency = csr_matrix((np.ones(len(rows)), (rows, cols + n)), shape=(n + len(predicted),) * 2)
+    _, labels = connected_components(adjacency, directed=False)
+    matches = []
+    for label in np.unique(labels[rows]):
+        ref_ids = np.where(labels[:n] == label)[0]
+        pred_ids = np.where(labels[n:] == label)[0]
+        local = _dense_match(reference[ref_ids], predicted[pred_ids], tolerance)
+        if len(local):
+            matches.append(np.column_stack((ref_ids[local[:, 0]], pred_ids[local[:, 1]])))
+    if not matches:
+        return np.empty((0, 2), dtype=int)
+    result = np.concatenate(matches)
+    return result[np.argsort(result[:, 0], kind='stable')]
 
 
 def sparse_graph(graph, weighted=False):
@@ -64,6 +94,31 @@ def geometry_metrics(reference, predicted, tolerance=5):
     denominator = completeness + correctness - completeness * correctness
     return {'completeness': completeness, 'correctness': correctness,
             'quality': completeness * correctness / denominator if denominator else 0.0}
+
+
+def road_type_metrics(reference, predicted, tolerance=5):
+    """Recall-like completeness per reference road type.
+
+    Predictions carry no road type, so only reference length can be split by
+    type: ``completeness_<type>`` is the share of reference road length of that
+    type within the buffer of the whole predicted graph.
+    """
+    from .road_types import ROAD_TYPES
+    if not len(reference.edge_classes):
+        return {}
+    pred = line_geometry(predicted)
+    pred_buffer = pred.buffer(tolerance) if tolerance else pred
+    result = {}
+    for value, road_type in enumerate(ROAD_TYPES):
+        selected = reference.edges[reference.edge_classes == value]
+        if not len(selected):
+            result[f'completeness_{road_type}'] = None
+            result[f'reference_length_{road_type}'] = 0.0
+            continue
+        geometry = unary_union([LineString(reference.nodes[edge]) for edge in selected])
+        result[f'completeness_{road_type}'] = geometry.intersection(pred_buffer).length / geometry.length if geometry.length else None
+        result[f'reference_length_{road_type}'] = float(geometry.length)
+    return result
 
 
 def topology_metrics(reference, predicted, tolerance=5, minimum_branch=8):
@@ -242,4 +297,5 @@ def evaluate(reference, predicted, tolerance=5, minimum_branch=8, **apls_setting
     evaluation_protocol(tolerance, minimum_branch, **apls_settings)
     return {**geometry_metrics(reference, predicted, tolerance),
             **topology_metrics(reference, predicted, tolerance, minimum_branch),
-            'apls': apls(reference, predicted, tolerance=tolerance, **apls_settings)}
+            'apls': apls(reference, predicted, tolerance=tolerance, **apls_settings),
+            **road_type_metrics(reference, predicted, tolerance)}

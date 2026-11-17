@@ -6,11 +6,13 @@ from collections import defaultdict
 from pathlib import Path
 
 from .benchmark import aggregate_reports
+from .road_types import ROAD_TYPES
 
 
 MAIN_COLUMNS = ('completeness', 'correctness', 'quality', 'apls', 'intersection_recall', 'intersection_precision',
                 'intersection_f1', 'intersection_degree_accuracy', 'connectivity', 'split_errors', 'spurious_branches')
 ABLATION_COLUMNS = ('quality', 'apls', 'intersection_f1', 'intersection_degree_accuracy', 'connectivity', 'type_macro_f1')
+ROAD_TYPE_COLUMNS = tuple(f'completeness_{road_type}' for road_type in ROAD_TYPES)
 
 
 def regenerate(reports, allow_incomplete=False):
@@ -70,12 +72,15 @@ def main(argv=None):
     result = regenerate(args.reports, args.allow_incomplete)
     output.mkdir(parents=True)
     (output / 'results.json').write_text(json.dumps(result, indent=2, allow_nan=False) + '\n')
-    for name, columns in (('main_results', MAIN_COLUMNS), ('ablations', ABLATION_COLUMNS)):
+    for name, columns in (('main_results', MAIN_COLUMNS), ('ablations', ABLATION_COLUMNS),
+                          ('road_types', ROAD_TYPE_COLUMNS)):
         rows = []
         for method, summary in result['methods'].items():
             if name == 'ablations' and method not in ('ldtr', 'ldtr-sam', 'ldtr-ntc', 'trasa'):
                 continue
-            if name == 'main_results' and method in ('ldtr-sam', 'ldtr-ntc'):
+            if name in ('main_results', 'road_types') and method in ('ldtr-sam', 'ldtr-ntc'):
+                continue
+            if name == 'road_types' and all(summary['mean'].get(key) is None for key in columns):
                 continue
             rows.append([method, *['--' if summary['mean'].get(key) is None else
                         f"{summary['mean'][key]:.6g} ± {summary['std_population'][key]:.6g}" for key in columns]])

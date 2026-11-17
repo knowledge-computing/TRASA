@@ -18,7 +18,14 @@ from .provenance import partitions, record_run, source_fingerprint, write_json
 from .validate_data import validate_dataset
 
 
-def run_epoch(model, loader, criterion, device, optimizer=None):
+def learning_rate(config, epoch):
+    """Constant rate, or one step drop at ``lr_drop_epoch`` (resume-safe: depends only on epoch)."""
+    if config.lr_drop_epoch and epoch >= config.lr_drop_epoch:
+        return config.learning_rate * config.lr_drop_factor
+    return config.learning_rate
+
+
+def run_epoch(model, loader, criterion, device, optimizer=None, grad_clip_norm=0.0):
     model.train(optimizer is not None)
     totals, count = {}, 0
     with torch.set_grad_enabled(optimizer is not None):
@@ -32,6 +39,8 @@ def run_epoch(model, loader, criterion, device, optimizer=None):
             if optimizer is not None:
                 optimizer.zero_grad(set_to_none=True)
                 losses['total'].backward()
+                if grad_clip_norm:
+                    torch.nn.utils.clip_grad_norm_([p for p in model.parameters() if p.requires_grad], grad_clip_norm)
                 optimizer.step()
             for name, value in losses.items():
                 totals[name] = totals.get(name, 0) + float(value.detach()) * len(rgb)
@@ -51,7 +60,12 @@ def main(argv=None):
     parser.add_argument('--sam-decoder', action='store_true')
     parser.add_argument('--ablation', choices=['ldtr', 'ldtr-sam', 'ldtr-ntc', 'trasa'], default='trasa')
     parser.add_argument('--max-epochs-this-run', type=int, help='Stop cleanly after this many epochs; retain the full configuration for resume')
+    parser.add_argument('--val-metrics-every', type=int, default=1,
+                        help='Compute map-level validation metrics every N epochs (and at the last epoch); 0 = only at the end. '
+                             'Checkpoint selection always uses the validation loss.')
     args = parser.parse_args(argv)
+    if args.val_metrics_every < 0:
+        raise ValueError('--val-metrics-every must be >= 0')
     config = Config.load(args.config)
     config = replace(config, guidance=args.ablation in ('trasa', 'ldtr-sam'),
                      ntc=args.ablation in ('trasa', 'ldtr-ntc'))
@@ -109,13 +123,19 @@ def main(argv=None):
     stop = min(config.epochs, start + args.max_epochs_this_run) if args.max_epochs_this_run else config.epochs
     for epoch in range(start, stop):
         started = time.perf_counter()
-        train_losses = run_epoch(model, loader, criterion, args.device, optimizer)
+        rate = learning_rate(config, epoch)
+        for group in optimizer.param_groups:
+            group['lr'] = rate
+        train_losses = run_epoch(model, loader, criterion, args.device, optimizer, config.grad_clip_norm)
         val_losses = run_epoch(model, validation, criterion, args.device)
-        from .predict_dataset import predict_dataset
-        validation_results = predict_dataset(model, val, config.batch_size)
-        row = {'epoch': epoch, 'train': train_losses, 'val': val_losses,
-               'val_metrics': {key: item['metrics'] for key, item in validation_results.items()},
-               'elapsed_seconds': time.perf_counter() - started}
+        last = epoch + 1 == config.epochs
+        every = args.val_metrics_every
+        row = {'epoch': epoch, 'learning_rate': rate, 'train': train_losses, 'val': val_losses}
+        if last or (every and (epoch + 1) % every == 0):
+            from .predict_dataset import predict_dataset
+            validation_results = predict_dataset(model, val, config.batch_size)
+            row['val_metrics'] = {key: item['metrics'] for key, item in validation_results.items()}
+        row['elapsed_seconds'] = time.perf_counter() - started
         improved = val_losses['total'] < best
         best = min(best, val_losses['total'])
         save_checkpoint(output / 'last.pt', model, optimizer, epoch, generator, provenance, best)
